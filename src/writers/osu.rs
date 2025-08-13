@@ -1,9 +1,8 @@
-use crate::models;
+use crate::models::generic;
 use crate::models::common::{
     Row, TimingChangeType, KeyType
 };
-use crate::models::sound::SoundBank;
-use models::sound::{KeySoundRow, KeySound, HitSoundType};
+use crate::models::generic::sound::{KeySoundRow, KeySound, HitSoundType, SoundBank};
 use crate::utils::string::add_key_value_template;
 use crate::utils::time::find_sliderend_time;
 #[allow(unused)]
@@ -37,7 +36,7 @@ fn generate_sb_sample(time: i32, sample_path: &str, volume: u8) -> String {
     format!("Sample,{},0,\"{}\",{}", time, sample_path, volume)
 }
 
-pub(crate) fn to_osu(chart: &models::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
     let mut template = String::from("osu file format v14\n");
     let key_count = chart.chartinfo.key_count;
 

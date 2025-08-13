@@ -5,7 +5,7 @@ use test_stuff::*;
 fn osu_to_qua_test() {
     parse_and_convert!(
         osu_to_qua,
-        "./tests/Maps/osu/360565_HatsuneMikuNoShoushitsu/cosMo@BousouP feat. Hatsune Miku - Hatsune Miku no Shoushitsu (juankristal) [Disappearance].osu",
+        "./tests/Maps/osu/165991_PlusDanshi/Reol - +Danshi (lZenxl) [7K OVERLOAD].osu",
         parse::from_osu,
         write::to_qua,
         true

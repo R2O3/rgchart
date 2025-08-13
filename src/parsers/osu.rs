@@ -1,6 +1,6 @@
 use std::fmt::{self, Display, Formatter};
-// use std::collections::HashMap;
 use crate::models;
+use crate::models::generic;
 use crate::models::common::{
     GameMode,
     Row,
@@ -8,7 +8,7 @@ use crate::models::common::{
     Key,
     TimingChangeType,
 };
-use crate::models::sound::KeySound;
+use crate::models::generic::sound::KeySound;
 use crate::utils::string::{
     remove_comments,
     parse_key_value,
@@ -312,11 +312,11 @@ fn parse_event(line: &str) -> Result<Event, Box<dyn std::error::Error>> {
 }
 
 fn process_timing_points(
-    timing_points: &mut models::timing_points::TimingPoints,
-    chartinfo: &mut models::chartinfo::ChartInfo,
+    timing_points: &mut generic::timing_points::TimingPoints,
+    chartinfo: &mut generic::chartinfo::ChartInfo,
     raw: &str
 ) -> Result<(), Box<dyn std::error::Error>>  {
-    use models::timing_points::TimingChange;
+    use generic::timing_points::TimingChange;
 
     for line in raw.lines().map(str::trim) {
         #[allow(unused)]
@@ -354,14 +354,14 @@ fn process_timing_points(
 }
 
 fn process_hitobjects(
-    hitobjects: &mut models::hitobjects::HitObjects,
-    timing_points: &mut models::timing_points::TimingPoints,
-    chartinfo: &mut models::chartinfo::ChartInfo,
-    soundbank: &mut models::sound::SoundBank,
+    hitobjects: &mut generic::hitobjects::HitObjects,
+    timing_points: &mut generic::timing_points::TimingPoints,
+    chartinfo: &mut generic::chartinfo::ChartInfo,
+    soundbank: &mut generic::sound::SoundBank,
     raw: &str
 ) -> Result<(), Box<dyn std::error::Error>> {
     use models::timeline::{HitObjectTimeline, TimelineHitObject};
-    use models::sound::HitSoundType;
+    use generic::sound::HitSoundType;
 
     let key_count = chartinfo.key_count;
 
@@ -438,9 +438,9 @@ fn process_hitobjects(
 }
 
 #[allow(clippy::single_match)]
-pub(crate) fn from_osu(raw_chart: &str) -> Result<models::chart::Chart, Box<dyn std::error::Error>> {
+pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn std::error::Error>> {
     use self::OsuSection;
-    use models::{metadata::Metadata, chartinfo::ChartInfo, timing_points::TimingPoints, hitobjects::HitObjects, sound, chart::Chart};
+    use generic::{metadata::Metadata, chartinfo::ChartInfo, timing_points::TimingPoints, hitobjects::HitObjects, sound, chart::Chart};
 
     let uncommented_chart = remove_comments(raw_chart, "//");
     if uncommented_chart.trim().is_empty() {

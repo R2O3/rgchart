@@ -6,7 +6,7 @@ use crate::models::common::{
     Key,
     KeyType
 };
-use crate::models::sound::KeySoundRow;
+use crate::models::generic::sound::KeySoundRow;
 use crate::utils::string::{
     remove_comments,
     StrDefaultExtension,
@@ -129,8 +129,9 @@ where
     }
 }
 
-fn process_timing_points(bpms_and_stops: &BpmsAndStops, bpms_only: (Vec<f32>, Vec<f32>), start_time: i32) -> models::timing_points::TimingPoints {
-    use models::timing_points::{TimingPoints, TimingChange};
+fn process_timing_points(bpms_and_stops: &BpmsAndStops, bpms_only: (Vec<f32>, Vec<f32>), start_time: i32)
+    -> models::generic::timing_points::TimingPoints {
+    use models::generic::timing_points::{TimingPoints, TimingChange};
     let mut timing_points = TimingPoints::with_capacity(64);
 
     let (beats, bpms_and_durations, change_types) = bpms_and_stops;
@@ -174,7 +175,7 @@ fn process_timing_points(bpms_and_stops: &BpmsAndStops, bpms_only: (Vec<f32>, Ve
                 let bpm_times_vec = timing_points.bpm_changes_zipped()
                 .map(|(t, _, _)| *t)
                 .collect::<Vec<i32>>();
-                let bpm_times: &[i32] = &bpm_times_vec;  // Now you have a slice
+                let bpm_times: &[i32] = &bpm_times_vec;
                 
                 let stop_end_beat = calculate_beat_from_time(
                     stop_end_time as i32,
@@ -200,8 +201,9 @@ fn process_timing_points(bpms_and_stops: &BpmsAndStops, bpms_only: (Vec<f32>, Ve
     timing_points
 }
 
-fn process_notes(raw_note_data: &str, chartinfo: &mut models::chartinfo::ChartInfo, bpms_and_stops: &BpmsAndStops) -> models::hitobjects::HitObjects {
-    use crate::models::hitobjects::HitObjects;
+fn process_notes(raw_note_data: &str, chartinfo: &mut models::generic::chartinfo::ChartInfo, bpms_and_stops: &BpmsAndStops)
+    -> models::generic::hitobjects::HitObjects {
+    use crate::models::generic::hitobjects::HitObjects;
 
     if raw_note_data.contains("No Note Data") { return HitObjects::with_capacity(2048) }
 
@@ -257,8 +259,8 @@ fn process_notes(raw_note_data: &str, chartinfo: &mut models::chartinfo::ChartIn
     hitobjects
 }
 
-pub(crate) fn from_sm(raw_chart: &str) -> Result<models::chart::Chart, Box<dyn std::error::Error>>  {
-    use models::{metadata::Metadata, chartinfo::ChartInfo, chart::Chart};
+pub(crate) fn from_sm(raw_chart: &str) -> Result<models::generic::chart::Chart, Box<dyn std::error::Error>>  {
+    use models::generic::{metadata::Metadata, chartinfo::ChartInfo, chart::Chart};
 
     let uncommented_chart = remove_comments(raw_chart, "//");
 
@@ -315,11 +317,11 @@ pub(crate) fn from_sm(raw_chart: &str) -> Result<models::chart::Chart, Box<dyn s
 }
 
 #[allow(unused)]
-pub(crate) fn from_sma(raw_chart: &str) -> Result<models::chart::Chart, Box<dyn std::error::Error>>  {
+pub(crate) fn from_sma(raw_chart: &str) -> Result<models::generic::chart::Chart, Box<dyn std::error::Error>>  {
     unimplemented!();
 }
 
 #[allow(unused)]
-pub(crate) fn from_ssc(raw_chart: &str) -> Result<models::chart::Chart, Box<dyn std::error::Error>>  {
+pub(crate) fn from_ssc(raw_chart: &str) -> Result<models::generic::chart::Chart, Box<dyn std::error::Error>>  {
     unimplemented!();
 }

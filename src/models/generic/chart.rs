@@ -1,4 +1,4 @@
-use crate::models::{
+use crate::models::generic::{
     chartinfo::ChartInfo, hitobjects::HitObjects, metadata::Metadata, sound::SoundBank,
     timing_points::TimingPoints,
 };

@@ -1,4 +1,4 @@
-use crate::models::{
+use crate::models::generic::{
     hitobjects::HitObjects,
     timing_points::TimingPoints,
     timing_points::TimingChange,

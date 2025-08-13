@@ -4,7 +4,7 @@ use crate::models::common::{
     Key,
     KeyType,
 };
-use crate::models::sound::{
+use crate::models::generic::sound::{
     KeySoundRow,
 };
 

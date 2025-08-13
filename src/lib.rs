@@ -1,10 +1,11 @@
 pub mod errors;
 pub(crate) use wasm_bindgen::prelude::*;
+pub use serde;
 
 #[macro_use]
 pub mod macros;
 
-pub type Chart = crate::models::chart::Chart;
+pub type Chart = crate::models::generic::chart::Chart;
 
 pub(crate) mod parsers;
 pub(crate) mod writers;

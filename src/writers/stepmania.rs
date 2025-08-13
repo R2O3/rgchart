@@ -1,4 +1,5 @@
 use crate::models;
+use crate::models::generic;
 use crate::models::common::{
     ChartDefaults,
     Key,
@@ -33,7 +34,7 @@ fn sm_row_to_str(row: &[Key]) -> String {
 }
 
 #[inline]
-fn pad_measure(rows: &models::hitobjects::HitObjects, range: &MeasureRange) -> Measure {
+fn pad_measure(rows: &generic::hitobjects::HitObjects, range: &MeasureRange) -> Measure {
     let key_count = rows.iter_zipped().next().map_or(0, |row| row.3.len());
 
     if range.is_empty() {
@@ -87,7 +88,7 @@ fn pad_measure(rows: &models::hitobjects::HitObjects, range: &MeasureRange) -> M
     padded_measure
 }
 
-pub(crate) fn to_sm(chart: &models::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
     let mut template = String::new();
     let mut bpm_template = String::new();
     let mut notes_template = String::new();
@@ -226,11 +227,11 @@ pub(crate) fn to_sm(chart: &models::chart::Chart) -> Result<String, Box<dyn std:
 }
 
 #[allow(unused)]
-pub(crate) fn to_sma(chart: &models::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_sma(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
     unimplemented!();
 }
 
 #[allow(unused)]
-pub(crate) fn to_ssc(chart: &models::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_ssc(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
     unimplemented!();
 }

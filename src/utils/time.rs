@@ -1,4 +1,5 @@
-use crate::models::{common::{KeyType, Row, TimingChangeType}, sound::KeySoundRow};
+use crate::models::common::{KeyType, Row, TimingChangeType};
+use crate::models::generic::sound::KeySoundRow;
 
 #[inline(always)]
 pub fn to_millis(number: f32) -> f32 {
