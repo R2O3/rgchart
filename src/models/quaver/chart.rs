@@ -7,7 +7,7 @@ use crate::models::quaver::{
 };
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct QuaChart {
+pub struct QuaFile {
     #[serde(rename = "AudioFile")]
     pub audio_file: String,
     

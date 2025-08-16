@@ -1,9 +1,9 @@
+use crate::models::osu::*;
 use crate::models::generic;
 use crate::models::common::{
     Row, TimingChangeType, KeyType
 };
 use crate::models::generic::sound::{KeySoundRow, KeySound, HitSoundType, SoundBank};
-use crate::utils::string::add_key_value_template;
 use crate::utils::time::find_sliderend_time;
 #[allow(unused)]
 use crate::errors;
@@ -24,178 +24,197 @@ fn column_to_coords(column: usize, key_count: usize) -> u16 {
     (column as f32 * 512.0 / key_count as f32) as u16 + 64
 }
 
-fn generate_normal(coords: i32, time: i32, hitsound_str: &str, volume: u8, custom_sample: &str) -> String {
-    format!("{},192,{},1,{},0:0:0:{}:{}\n", coords, time, hitsound_str, volume, custom_sample)
-}
-
-fn generate_slider(coords: i32, time: i32, hitsound_str: &str, slider_end_time: i32, volume: u8, custom_sample: &str) -> String {
-    format!("{},192,{},128,{},{}:0:0:0:{}:{}\n", coords, time, hitsound_str, slider_end_time, volume, custom_sample)
-}
-
-fn generate_sb_sample(time: i32, sample_path: &str, volume: u8) -> String {
-    format!("Sample,{},0,\"{}\",{}", time, sample_path, volume)
-}
-
 pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
-    let mut template = String::from("osu file format v14\n");
     let key_count = chart.chartinfo.key_count;
+    
+    let general = general::General {
+        audio_filename: chart.chartinfo.song_path.clone(),
+        audio_lead_in: 0,
+        preview_time: chart.chartinfo.preview_time,
+        countdown: 0,
+        sample_set: sound::SampleSet::Soft,
+        stack_leniency: 0.7,
+        mode: 3,
+        letterbox_in_breaks: false,
+        special_style: false,
+        widescreen_storyboard: true,
+        ..Default::default()
+    };
 
-    // General
-    template.push_str("\n[General]\n");
-    add_key_value_template(&mut template,
-        "AudioFilename", ": ", &chart.chartinfo.song_path, "\n");
-    add_key_value_template(&mut template,
-        "AudioLeadIn", ": ", "0", "\n");
-    add_key_value_template(&mut template,
-        "PreviewTime", ": ", &chart.chartinfo.preview_time.to_string(), "\n");
-    template.push_str("Countdown: 0
-SampleSet: Soft
-StackLeniency: 0.7
-Mode: 3
-LetterboxInBreaks: 0
-SpecialStyle: 0
-WidescreenStoryboard: 1");
-    template.push('\n');
+    let editor = Some(editor::Editor {
+        distance_spacing: Some(1.0),
+        beat_divisor: Some(4),
+        grid_size: Some(4),
+        timeline_zoom: Some(1.0),
+        ..Default::default()
+    });
 
-    // Editor
-    template.push_str("\n[Editor]
-DistanceSpacing: 1
-BeatDivisor: 4
-GridSize: 4
-TimelineZoom: 1
-");
+    let metadata = metadata::Metadata {
+        title: chart.metadata.title.replace("\n", ""),
+        title_unicode: chart.metadata.alt_title.clone(),
+        artist: chart.metadata.artist.clone(),
+        artist_unicode: chart.metadata.alt_artist.clone(),
+        creator: chart.metadata.creator.clone(),
+        version: chart.chartinfo.difficulty_name.clone(),
+        source: chart.metadata.source.clone(),
+        tags: chart.metadata.tags.clone(),
+        beatmap_id: -1,
+        beatmap_set_id: -1,
+    };
 
-    // Metadata
-    template.push_str("\n[Metadata]\n");
-    add_key_value_template(&mut template,
-        "Title", ": ", &chart.metadata.title.replace("\n", ""), "\n");
-    add_key_value_template(&mut template,
-        "TitleUnicode", ": ", &chart.metadata.alt_title, "\n");
-    add_key_value_template(&mut template,
-        "Artist", ": ", &chart.metadata.artist, "\n");
-    add_key_value_template(&mut template,
-        "ArtistUnicode", ": ", &chart.metadata.alt_artist, "\n");
-    add_key_value_template(&mut template,
-        "Creator", ": ", &chart.metadata.creator, "\n");
-    add_key_value_template(&mut template,
-        "Version", ": ", &chart.chartinfo.difficulty_name, "\n");
-    add_key_value_template(&mut template,
-        "Source", ": ", &chart.metadata.source, "\n");
-    add_key_value_template(&mut template,
-        "Tags", ": ", &chart.metadata.tags.join(" "), "\n");
-    add_key_value_template(&mut template,
-        "BeatmapID", ": ", "0", "\n");
-    add_key_value_template(&mut template,
-        "BeatmapSetID", ": ", "-1", "\n");
+    let difficulty = difficulty::Difficulty {
+        hp_drain_rate: 8.5,
+        circle_size: key_count as f32,
+        overall_difficulty: 8.0,
+        approach_rate: 5.0,
+        slider_multiplier: 1.4,
+        slider_tick_rate: 1.0,
+    };
 
-    // Difficulty
-    template.push_str("\n[Difficulty]\n");
-    add_key_value_template(&mut template,
-        "HPDrainRate", ": ", "8.5", "\n");
-    add_key_value_template(&mut template,
-        "CircleSize", ": ", &key_count.to_string(), "\n");
-    template.push_str("OverallDifficulty:8
-ApproachRate:5
-SliderMultiplier:1.4
-SliderTickRate:1");
-    template.push('\n');
+    let mut events = events::Events {
+        background: Some(events::Background {
+            filename: chart.chartinfo.bg_path.clone(),
+            x_offset: 0,
+            y_offset: 0,
+        }),
+        video: None,
+        ..Default::default()
+    };
 
-    // Events
-    template.push_str("\n[Events]\n");
-    template.push_str("//Background and Video events\n");
-    template.push_str(&format!("0,0,\"{}\",0,0\n", &chart.chartinfo.bg_path));
-    template.push_str("//Break Periods
-//Storyboard Layer 0 (Background)
-//Storyboard Layer 1 (Fail)
-//Storyboard Layer 2 (Pass)
-//Storyboard Layer 3 (Foreground)
-//Storyboard Layer 4 (Overlay)
-//Storyboard Sound Samples\n");
-
-    match &chart.soundbank {
-        Some(soundbank) => {
-            if soundbank.sound_effects.is_empty() { } else {
-                template.push('\n');
-                for sound_effect in &soundbank.sound_effects {
-                    let sample_path = soundbank.get_sound_sample(sound_effect.sample).unwrap_or("".to_string());
-                    template.push_str(&generate_sb_sample(sound_effect.time, &sample_path, sound_effect.volume));
-                    template.push('\n');
-                }
-            }
+    if let Some(ref soundbank) = chart.soundbank {
+        for sound_effect in &soundbank.sound_effects {
+            let sample_path = soundbank.get_sound_sample(sound_effect.sample)
+                .unwrap_or_default();
+            events.add_sample(
+                sound_effect.time,
+                0,
+                sample_path,
+                sound_effect.volume,
+            );
         }
-        None => { }
     }
 
-    // process timing points
-    template.push_str("\n[TimingPoints]\n");
+    let mut timing_points = timing_points::TimingPoints::new();
+
     for timing_point in chart.timing_points.iter_views() {
         match timing_point.change_type {
             TimingChangeType::Bpm => {
-                template.push_str(&format!("{},{},4,1,0,100,1,0\n",
-                    timing_point.time,
-                    bpm_to_beatlength(timing_point.value),
-                ));
+                timing_points.add_timing_point(timing_points::TimingPoint {
+                    time: *timing_point.time,
+                    beat_length: bpm_to_beatlength(timing_point.value),
+                    meter: 4,
+                    sample_set: 1,
+                    sample_index: 0,
+                    volume: 100,
+                    uninherited: true,
+                    effects: 0,
+                });
             },
             TimingChangeType::Sv => {
-                template.push_str(&format!("{},{},4,1,0,100,0,0\n",
-                    timing_point.time,
-                    multiplier_to_beatlength(timing_point.value),
-                ));
+                timing_points.add_timing_point(timing_points::TimingPoint {
+                    time: *timing_point.time,
+                    beat_length: multiplier_to_beatlength(timing_point.value),
+                    meter: 4,
+                    sample_set: 1,
+                    sample_index: 0,
+                    volume: 100,
+                    uninherited: false,
+                    effects: 0,
+                });
             },
             _ => {}
         }
     }
 
-    template.push_str("\n[HitObjects]\n");
-    let soundbank = chart.soundbank.clone().unwrap_or(SoundBank::new());
-    let hitobjects: Vec<(&i32, &f32, &KeySoundRow, &Row)> = chart.hitobjects.iter_zipped().collect();
-    template.reserve(hitobjects.len() * key_count as usize);
-    #[allow(unused)]
-    for (row_idx, (time, beat, keysounds, row)) in hitobjects.iter().enumerate() {
+    let mut hitobjects = hitobjects::HitObjects::new();
+
+    let mut soundbank = chart.soundbank.clone().unwrap_or(SoundBank::new());
+    let hitobjects_data: Vec<(&i32, &f32, &KeySoundRow, &Row)> = chart.hitobjects.iter_zipped().collect();
+    
+    for (row_idx, (time, _beat, keysounds, row)) in hitobjects_data.iter().enumerate() {
         for (i, key) in row.iter().enumerate() {
-            let coords = column_to_coords(i, chart.chartinfo.key_count as usize);
+            let coords = column_to_coords(i, key_count as usize);
 
             let keysound = if keysounds.is_empty {
                 KeySound::normal(100)
             } else {
                 keysounds[i]
             };
+
             let hitsound = keysound.hitsound_type;
-            let hitsound_str = match hitsound {
-                HitSoundType::Normal => "0",
-                HitSoundType::Clap => "1",
-                HitSoundType::Whistle => "2",
-                HitSoundType::Finish => "3",
+            let hitsound_value = match hitsound {
+                HitSoundType::Normal => 0,
+                HitSoundType::Whistle => 2,
+                HitSoundType::Finish => 4,
+                HitSoundType::Clap => 8,
             };
+
             let custom_sample = if keysound.has_custom {
-                soundbank.get_sound_sample(keysound.sample
-                    .unwrap_or(0))
-                    .unwrap_or("".to_string())
+                soundbank.get_sound_sample(keysound.sample.unwrap_or(0))
+                    .unwrap_or_default()
             } else {
-                "".to_string()
+                String::new()
             };
+
             let volume = if keysound.volume >= 100 {
                 0
             } else {
                 keysound.volume
             };
             
+            let hit_sample = sound::HitSample {
+                normal_set: 0,
+                addition_set: 0,
+                index: 0,
+                volume,
+                filename: custom_sample,
+            };
+            
             match key.key_type {
                 KeyType::Normal => {
-                    template.push_str(&generate_normal(coords.into(), **time, &hitsound_str, volume, &custom_sample));
+                    let hit_object = hitobjects::HitObject {
+                        x: coords as i32,
+                        y: 192,
+                        time: **time,
+                        object_type: 1,
+                        hit_sound: hitsound_value,
+                        object_params: Vec::new(),
+                        hit_sample,
+                    };
+                    hitobjects.add_hit_object(hit_object);
                 },
                 KeyType::SliderStart => {
                     let slider_end_time = if let Some(time) = key.slider_end_time() {
                         time
                     } else {
-                        find_sliderend_time(row_idx, i, &hitobjects)
+                        find_sliderend_time(row_idx, i, &hitobjects_data)
                     };
-                    template.push_str(&generate_slider(coords.into(), **time, &hitsound_str, slider_end_time, volume, &custom_sample));
+
+                    let hit_object = hitobjects::HitObject {
+                        x: coords as i32,
+                        y: 192,
+                        time: **time,
+                        object_type: 128,
+                        hit_sound: hitsound_value,
+                        object_params: vec![slider_end_time.to_string()],
+                        hit_sample,
+                    };
+                    hitobjects.add_hit_object(hit_object);
                 },
                 _ => continue,
             }
         }
     }
 
-    Ok(template)
+    let osu_file = chart::OsuFile {
+        general,
+        editor,
+        metadata,
+        difficulty,
+        events,
+        timing_points,
+        hitobjects,
+    };
+
+    Ok(osu_file.to_osu_format_mania(&mut soundbank))
 }

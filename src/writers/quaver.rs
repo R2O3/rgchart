@@ -2,7 +2,7 @@ use crate::models::generic;
 use crate::models::generic::sound::{KeySound, KeySoundRow, HitSoundType};
 use crate::models::common::{GameMode, KeyType, Row};
 use crate::models::quaver::{
-    chart::QuaChart,
+    chart::QuaFile,
     // editor,
     sound,
     timing_points,
@@ -130,7 +130,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         }
     }
 
-    let qua_chart = QuaChart {
+    let qua_chart = QuaFile {
         audio_file: chart.chartinfo.song_path.clone(),
         song_preview_time: chart.chartinfo.preview_time,
         background_file: chart.chartinfo.bg_path.clone(),
