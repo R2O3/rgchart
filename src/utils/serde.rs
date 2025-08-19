@@ -11,6 +11,26 @@ where
     }
 }
 
+pub fn is_default_f32(value: &f32) -> bool {
+    *value == 0.0
+}
+
+pub fn normalize_json_keys(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Object(map) => {
+            let normalized_map: serde_json::Map<String, serde_json::Value> = map
+                .into_iter()
+                .map(|(k, v)| (k.to_lowercase(), normalize_json_keys(v)))
+                .collect();
+            serde_json::Value::Object(normalized_map)
+        }
+        serde_json::Value::Array(arr) => {
+            serde_json::Value::Array(arr.into_iter().map(normalize_json_keys).collect())
+        }
+        other => other,
+    }
+}
+
 pub fn process_bracket_sections<F>(string: &str, mut lambda: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: FnMut(&str, &str) -> Result<(), Box<dyn std::error::Error>>,

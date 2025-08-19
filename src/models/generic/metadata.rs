@@ -49,9 +49,9 @@ impl Metadata {
     pub fn empty() -> Self {
         Self {
             title: ChartDefaults::TITLE.to_string(),
-            alt_title: ChartDefaults::ALT_TITLE.to_string(),
+            alt_title: String::new(),
             artist: ChartDefaults::ARTIST.to_string(),
-            alt_artist: ChartDefaults::ALT_ARTIST.to_string(),
+            alt_artist: String::new(),
             creator: ChartDefaults::CREATOR.to_string(),
             genre: ChartDefaults::GENRE.to_string(),
             source: ChartDefaults::SOURCE.to_string(),

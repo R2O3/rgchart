@@ -72,6 +72,16 @@ pub struct QuaFile {
     pub hitobjects: Vec<HitObject>,
 }
 
+impl QuaFile {
+    pub fn to_yaml(&self) -> Result<String, serde_yaml_ng::Error> {
+        serde_yaml_ng::to_string(self)
+    }
+
+    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml_ng::Error> {
+        serde_yaml_ng::from_str(yaml)
+    }
+}
+
 fn default_id() -> i32 { -1i32 }
 fn default_bpm_does_not_affect_scroll_velocity() -> bool { true }
 fn default_initial_scroll_velocity() -> f32 { 1f32 }

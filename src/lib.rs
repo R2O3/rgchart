@@ -30,6 +30,11 @@ pub mod parse {
     pub fn from_qua(raw_chart: &str) -> Result<crate::Chart, Box<dyn std::error::Error>> {
         parsers::quaver::from_qua(raw_chart)
     }
+
+    #[inline]
+    pub fn from_fsc(raw_chart: &str) -> Result<crate::Chart, Box<dyn std::error::Error>> {
+        parsers::fluxis::from_fsc(raw_chart)
+    }
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -61,6 +66,14 @@ pub mod parse {
             Err(e) => Err(JsError::new(&e.to_string()))
         }
     }
+
+    #[wasm_bindgen]
+    pub fn parse_from_fsc(raw_chart: &str) -> Result<crate::Chart, JsError> {
+        match parsers::fluxis::from_fsc(raw_chart) {
+            Ok(chart) => Ok(chart),
+            Err(e) => Err(JsError::new(&e.to_string()))
+        }
+    }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -80,6 +93,11 @@ pub mod write {
     #[inline]
     pub fn to_qua(chart: &crate::Chart) -> Result<String, Box<dyn std::error::Error>> {
         writers::quaver::to_qua(chart)
+    }
+
+    #[inline]
+    pub fn to_fsc(chart: &crate::Chart) -> Result<String, Box<dyn std::error::Error>> {
+        writers::fluxis::to_fsc(chart)
     }
 }
 
@@ -108,6 +126,14 @@ pub mod write {
     #[wasm_bindgen]
     pub fn write_to_qua(chart: &crate::Chart) -> Result<String, JsError> {
         match writers::quaver::to_qua(chart) {
+            Ok(chart) => Ok(chart),
+            Err(e) => Err(JsError::new(&e.to_string()))
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn write_to_fsc(chart: &crate::Chart) -> Result<String, JsError> {
+        match writers::fluxis::to_fsc(chart) {
             Ok(chart) => Ok(chart),
             Err(e) => Err(JsError::new(&e.to_string()))
         }

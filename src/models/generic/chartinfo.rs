@@ -6,7 +6,13 @@ pub struct ChartInfo {
     #[wasm_bindgen(getter_with_clone)]
     pub difficulty_name: String,
     #[wasm_bindgen(getter_with_clone)]
+    pub od: f32,
+    #[wasm_bindgen(getter_with_clone)]
+    pub hp: f32,
+    #[wasm_bindgen(getter_with_clone)]
     pub bg_path: String,
+    #[wasm_bindgen(getter_with_clone)]
+    pub video_path: String,
     #[wasm_bindgen(getter_with_clone)]
     pub song_path: String,
     #[wasm_bindgen(getter_with_clone)]
@@ -22,7 +28,10 @@ pub struct ChartInfo {
 impl ChartInfo {
     pub fn new(
         difficulty_name: String,
+        hp: f32,
+        od: f32,
         bg_path: String,
+        video_path: String,
         song_path: String,
         audio_offset: i32,
         preview_time: i32,
@@ -30,6 +39,9 @@ impl ChartInfo {
     ) -> Self {
         Self {
             difficulty_name,
+            hp,
+            od,
+            video_path,
             bg_path,
             song_path,
             audio_offset,
@@ -41,7 +53,10 @@ impl ChartInfo {
     pub fn empty() -> Self {
         Self {
             difficulty_name: String::with_capacity(20),
+            hp: 8.0,
+            od: 8.0,
             bg_path: String::with_capacity(20),
+            video_path: String::with_capacity(20),
             song_path: String::with_capacity(10),
             audio_offset: 0,
             preview_time: 0,

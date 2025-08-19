@@ -93,12 +93,18 @@ pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
         song_path: osu_file.general.audio_filename,
         preview_time: osu_file.general.preview_time,
         difficulty_name: osu_file.metadata.version,
+        od: osu_file.difficulty.overall_difficulty,
+        hp: osu_file.difficulty.hp_drain_rate,
         key_count: osu_file.difficulty.circle_size as u8,
         ..ChartInfo::empty()
     };
     
     if let Some(ref bg) = osu_file.events.background {
         chartinfo.bg_path = bg.filename.clone();
+    }
+
+    if let Some(ref video) = osu_file.events.video {
+        chartinfo.video_path = video.filename.clone();
     }
 
     let mut timing_points = TimingPoints::with_capacity(osu_file.timing_points.count());

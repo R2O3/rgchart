@@ -10,7 +10,6 @@ use crate::models::quaver::{
 };
 use crate::utils::time::find_sliderend_time;
 use crate::errors;
-use serde_yaml_ng;
 
 fn get_mode_string(key_count: u8) -> Result<String, Box<dyn std::error::Error>> {
     match key_count {
@@ -117,6 +116,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     } else {
                         find_sliderend_time(row_idx, i, &hitobjects)
                     };
+
                     qua_hitobjects.push(hitobjects::HitObject::LongNote(hitobjects::LongNote {
                         start_time: **time as f32,
                         lane: i + 1,
@@ -154,6 +154,6 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         hitobjects: qua_hitobjects,
     };
 
-    let yaml_string = serde_yaml_ng::to_string(&qua_chart)?;
+    let yaml_string = QuaFile::to_yaml(&qua_chart)?;
     Ok(yaml_string)
 }

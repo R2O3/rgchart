@@ -77,7 +77,12 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
             x_offset: 0,
             y_offset: 0,
         }),
-        video: None,
+        video: Some(events::Video {
+            start_time: 0,
+            filename: chart.chartinfo.video_path.clone(),
+            x_offset: 0,
+            y_offset: 0,
+        }),
         ..Default::default()
     };
 

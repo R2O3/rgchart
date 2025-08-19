@@ -87,7 +87,7 @@ fn process_notes(quaver_hitobjects: Vec<quaver::hitobjects::HitObject>,
                 let slider = TimelineHitObject {
                     time: hitobject.start_time() as i32,
                     column: lane,
-                    key: Key::slider_start(Some(hitobject.start_time() as i32)),
+                    key: Key::slider_start(Some(hitobject.end_time().unwrap_or(hitobject.start_time()) as i32)),
                     keysound: Some(hitobject.get_generic_keysound())
                 };
 
@@ -130,7 +130,7 @@ pub(crate) fn from_qua(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
     use models::timeline::TimingPointTimeline;
     use quaver::chart::QuaFile;
 
-    let quaver_file: QuaFile = serde_yaml_ng::from_str(&raw_chart)?;
+    let quaver_file: QuaFile = QuaFile::from_yaml(&raw_chart)?;
 
     let key_count = match quaver_file.mode.as_str() {
         "Keys4" => 4,

@@ -22,3 +22,14 @@ fn qua_to_osu_test() {
         true
     );
 }
+
+#[test]
+fn fsc_to_osu_test() {
+    parse_and_convert!(
+        fsc_to_osu,
+        "./tests/Maps/fluXis/1463_IamAControversy/1749337797.fsc",
+        parse::from_fsc,
+        write::to_osu,
+        true
+    );
+}

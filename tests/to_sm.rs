@@ -22,3 +22,14 @@ fn qua_to_sm_test() {
         true
     );
 }
+
+#[test]
+fn fsc_to_sm_test() {
+    parse_and_convert!(
+        fsc_to_sm,
+        "./tests/Maps/fluXis/935_hard-coremata/Kobaryo feat. Various Artist - HARD-COREMATA (el_matero) [COREMATA].osu.fsc",
+        parse::from_fsc,
+        write::to_sm,
+        true
+    );
+}
