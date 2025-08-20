@@ -48,27 +48,52 @@ async function runJsTests() {
         const to_osu = await import('./js/to_osu.js');
         const to_sm = await import('./js/to_sm.js');
         const to_qua = await import('./js/to_qua.js');
+        const to_fsc = await import('./js/to_fsc.js');
 
-
+        // to osu
         await measureTime(to_osu.sm_to_osu,
             await fetchFromUrl('/Maps/etterna/Kil_ChineseTea/ct.sm'))
             .catch(err => console.error(err));
         await measureTime(to_osu.qua_to_osu,
             await fetchFromUrl('/Maps/quaver/4548_886_Ziqqurat/34785.qua'))
             .catch(err => console.error(err));
+        await measureTime(to_osu.fsc_to_osu,
+            await fetchFromUrl('/Maps/fluXis/1463_IamAControversy/1749337797.fsc'))
+            .catch(err => console.error(err));
         
+        // to sm
         await measureTime(to_sm.osu_to_sm,
             await fetchFromUrl('/Maps/osu/1688622_EverGreen/ClumsyRecord - Ever Green feat. Ganeme (FAMoss) [Misfortune Lunatic].osu'))
             .catch(err => console.error(err));
         await measureTime(to_sm.qua_to_sm,
             await fetchFromUrl('/Maps/quaver/4548_886_Ziqqurat/34785.qua'))
             .catch(err => console.error(err));
+        await measureTime(to_sm.fsc_to_sm,
+            await fetchFromUrl('/Maps/fluXis/935_hard-coremata/Kobaryo feat. Various Artist - HARD-COREMATA (el_matero) [COREMATA].osu.fsc'))
+            .catch(err => console.error(err));
 
+        // to qua
         await measureTime(to_qua.osu_to_qua,
             await fetchFromUrl('/Maps/osu/360565_HatsuneMikuNoShoushitsu/cosMo@BousouP feat. Hatsune Miku - Hatsune Miku no Shoushitsu (juankristal) [Disappearance].osu'))
             .catch(err => console.error(err));
         await measureTime(to_qua.sm_to_qua,
             await fetchFromUrl('/Maps/etterna/Kil_ChineseTea/ct.sm'))
+            .catch(err => console.error(err));
+        await measureTime(to_qua.fsc_to_qua,
+            await fetchFromUrl('/Maps/fluXis/225_BimboLimbo/1720743020.fsc'))
+            .catch(err => console.error(err));
+        
+        // to fsc
+        await measureTime(to_fsc.osu_to_fsc,
+            await fetchFromUrl('/Maps/osu/1688622_EverGreen/ClumsyRecord - Ever Green feat. Ganeme (FAMoss) [Misfortune Lunatic].osu'))
+            .catch(err => console.error(err));
+
+        await measureTime(to_fsc.sm_to_fsc,
+            await fetchFromUrl('/Maps/etterna/Kil_ChineseTea/ct.sm'))
+            .catch(err => console.error(err));
+        
+        await measureTime(to_fsc.qua_to_fsc,
+            await fetchFromUrl('/Maps/quaver/34863_965_cradles/148156.qua'))
             .catch(err => console.error(err));
         
     } catch (err) {

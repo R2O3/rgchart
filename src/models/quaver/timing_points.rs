@@ -15,6 +15,6 @@ pub struct SliderVelocity {
     #[serde(rename = "StartTime", serialize_with = "trim_float")]
     pub start_time: f32,
     
-    #[serde(rename = "Multiplier")]
-    pub multiplier: f32,
+    #[serde(rename = "Multiplier", skip_serializing_if = "Option::is_none")]
+    pub multiplier: Option<f32>,
 }

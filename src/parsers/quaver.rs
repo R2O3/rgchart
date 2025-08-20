@@ -39,7 +39,7 @@ fn process_sv(slider_velocities: Vec<quaver::timing_points::SliderVelocity>,
     for sv in slider_velocities {
         timeline.add_sorted(TimelineTimingPoint {
             time: sv.start_time as i32,
-            value: sv.multiplier,
+            value: sv.multiplier.unwrap_or(1.0),
             change_type: TimingChangeType::Sv,
         });
     }

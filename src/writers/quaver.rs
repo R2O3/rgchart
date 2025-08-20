@@ -86,7 +86,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         .sv_changes_zipped()
         .map(|(time, _, change)| timing_points::SliderVelocity {
             start_time: *time as f32,
-            multiplier: change.value,
+            multiplier: Some(change.value),
         })
         .collect();
 
