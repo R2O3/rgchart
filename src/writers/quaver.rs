@@ -103,12 +103,13 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
             match key.key_type {
                 KeyType::Normal => {
-                    qua_hitobjects.push(hitobjects::HitObject::NormalNote(hitobjects::NormalNote {
+                    qua_hitobjects.push(hitobjects::HitObject {
                         start_time: **time as f32,
                         lane: i + 1,
                         hit_sound: get_hitsound_type(keysound.hitsound_type),
                         key_sounds: create_keysounds(keysound),
-                    }));
+                        ..Default::default()
+                    });
                 }
                 KeyType::SliderStart => {
                     let slider_end_time = if let Some(time) = key.slider_end_time() {
@@ -117,13 +118,14 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                         find_sliderend_time(row_idx, i, &hitobjects)
                     };
 
-                    qua_hitobjects.push(hitobjects::HitObject::LongNote(hitobjects::LongNote {
+                    qua_hitobjects.push(hitobjects::HitObject {
                         start_time: **time as f32,
                         lane: i + 1,
-                        end_time: slider_end_time as f32,
+                        endtime: Some(slider_end_time as f32),
                         hit_sound: get_hitsound_type(keysound.hitsound_type),
                         key_sounds: create_keysounds(keysound),
-                    }));
+                        ..Default::default()
+                    });
                 }
                 _ => continue,
             }

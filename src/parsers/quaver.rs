@@ -87,7 +87,7 @@ fn process_notes(quaver_hitobjects: Vec<quaver::hitobjects::HitObject>,
                 let slider = TimelineHitObject {
                     time: hitobject.start_time() as i32,
                     column: lane,
-                    key: Key::slider_start(Some(hitobject.end_time().unwrap_or(hitobject.start_time()) as i32)),
+                    key: Key::slider_start(Some(hitobject.end_time().unwrap_or(0.0) as i32)),
                     keysound: Some(hitobject.get_generic_keysound())
                 };
 
