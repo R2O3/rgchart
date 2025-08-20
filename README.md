@@ -50,6 +50,9 @@ let sm_chart = parse::from_sm(raw_sm_string).expect("Failed to parse Stepmania c
 
 // Parse a Quaver chart from string
 let qua_chart = parse::from_qua(raw_qua_string).expect("Failed to parse Quaver chart");
+
+// Parse a fluXis chart from string
+let qua_chart = parse::from_fsc(raw_qua_string).expect("Failed to parse fluXis chart");
 ```
 
 #### Writing Charts
@@ -68,6 +71,9 @@ let sm_string = write::to_sm(&chart);
 
 // Write to Quaver format
 let qua_string = write::to_qua(&chart);
+
+// Write to fluXis format
+let fsc_string = write::To_fsc(&chart);
 ```
 
 #### Chart Structure
@@ -167,6 +173,9 @@ const chart = rgcChart.parse_from_sm(rawSmString);
 
 // Parse a Quaver chart from string
 const chart = rgcChart.parse_from_qua(rawQuaString);
+
+// Parse a fluXis chart from string
+const chart = rgcChart.parse_from_fsc(rawFscString);
 ```
 
 #### Writing Charts
@@ -179,6 +188,9 @@ const smString = rgcChart.write_to_sm(chart);
 
 // write to Quaver format
 const quaString = rgcChart.write_to_qua(chart);
+
+// write to fluXis format
+const fscString = rgcChart.write_to_fsc(chart);
 ```
 
 #### TypeScript Types
