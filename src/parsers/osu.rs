@@ -112,13 +112,13 @@ pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
     for tp in &osu_file.timing_points.timing_points {
         if tp.is_uninherited() {
             let bpm = tp.bpm().unwrap_or(120.0);
-            timing_points.add(tp.time, 0.0, generic::timing_points::TimingChange {
+            timing_points.add(tp.time as i32, 0.0, generic::timing_points::TimingChange {
                 change_type: TimingChangeType::Bpm,
                 value: bpm,
             });
         } else {
             let sv = tp.slider_velocity_multiplier().unwrap_or(1.0);
-            timing_points.add(tp.time, 0.0, generic::timing_points::TimingChange {
+            timing_points.add(tp.time as i32, 0.0, generic::timing_points::TimingChange {
                 change_type: TimingChangeType::Sv,
                 value: sv,
             });
@@ -146,7 +146,7 @@ pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
     let mut timeline = HitObjectTimeline::with_capacity(osu_file.hitobjects.count());
 
     for hit_object in osu_file.hitobjects.iter() {
-        let object_time = hit_object.time;
+        let object_time = hit_object.time as i32;
         let object_column = hit_object.mania_column(key_count) as usize;
         
         let key_sound = hit_object.get_generic_keysound(&mut soundbank);

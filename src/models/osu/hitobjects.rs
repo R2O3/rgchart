@@ -20,7 +20,7 @@ pub struct HitObject {
     
     pub y: i32,
     
-    pub time: i32,
+    pub time: f32,
     
     pub object_type: u8,
     
@@ -53,7 +53,7 @@ impl HitObject {
         let y = parts[1].parse::<i32>()
             .map_err(|_| format!("Invalid y value: {}", parts[1]))?;
             
-        let time = parts[2].parse::<i32>()
+        let time = parts[2].parse::<f32>()
             .map_err(|_| format!("Invalid time value: {}", parts[2]))?;
             
         let object_type = parts[3].parse::<u8>()
@@ -111,7 +111,7 @@ impl HitObject {
         })
     }
 
-    pub fn new(x: i32, y: i32, time: i32, object_type: u8, hit_sound: u8) -> Self {
+    pub fn new(x: i32, y: i32, time: f32, object_type: u8, hit_sound: u8) -> Self {
         Self {
             x,
             y,
@@ -383,19 +383,19 @@ impl HitObject {
             common::TaikoHitobjectType::DrumRoll => {
                 parts.push("2".to_string());
                 parts.push("0".to_string());
-                let end_time = taiko_obj.end_time.unwrap_or(self.time);
-                parts.push(format!("L|256:192,1,{}", end_time - self.time));
+                let end_time = taiko_obj.end_time.unwrap_or(self.time as i32);
+                parts.push(format!("L|256:192,1,{}", end_time - self.time as i32));
             },
             common::TaikoHitobjectType::BonusDrumRoll => {
                 parts.push("2".to_string());
                 parts.push("4".to_string());
-                let end_time = taiko_obj.end_time.unwrap_or(self.time);
-                parts.push(format!("L|256:192,1,{}", end_time - self.time));
+                let end_time = taiko_obj.end_time.unwrap_or(self.time as i32);
+                parts.push(format!("L|256:192,1,{}", end_time - self.time as i32));
             },
             common::TaikoHitobjectType::Balloon => {
                 parts.push("8".to_string());
                 parts.push("0".to_string());
-                let end_time = taiko_obj.end_time.unwrap_or(self.time);
+                let end_time = taiko_obj.end_time.unwrap_or(self.time as i32);
                 parts.push(end_time.to_string());
             },
             common::TaikoHitobjectType::Empty | common::TaikoHitobjectType::Unknown => {
@@ -569,33 +569,40 @@ impl HitObjects {
         self.hit_objects.iter().filter(|obj| obj.is_spinner()).count()
     }
     
-    pub fn start_time(&self) -> Option<i32> {
+    pub fn start_time(&self) -> Option<f32> {
         self.hit_objects.first().map(|obj| obj.time)
     }
     
     pub fn end_time(&self) -> Option<i32> {
         self.hit_objects.last().and_then(|obj| {
-            obj.end_time().or(Some(obj.time))
+            obj.end_time().or(Some(obj.time as i32))
         })
     }
     
-    pub fn length(&self) -> Option<i32> {
+    pub fn length(&self) -> Option<f32> {
         if let (Some(start), Some(end)) = (self.start_time(), self.end_time()) {
-            Some(end - start)
+            Some(end as f32 - start)
         } else {
             None
         }
     }
     
-    pub fn objects_in_time_range(&self, start_time: i32, end_time: i32) -> Vec<&HitObject> {
+    pub fn objects_in_time_range(&self, start_time: f32, end_time: f32) -> Vec<&HitObject> {
         self.hit_objects
             .iter()
-            .filter(|obj| obj.time >= start_time && obj.time <= end_time)
+            .filter(|obj| obj.time >= start_time && obj.time <= (end_time as f32))
             .collect()
     }
-    
+
     pub fn sort_by_time(&mut self) {
-        self.hit_objects.sort_by_key(|obj| obj.time);
+        self.hit_objects.sort_by(|a, b| {
+            match (a.time.is_nan(), b.time.is_nan()) {
+                (true, true) => std::cmp::Ordering::Equal,
+                (true, false) => std::cmp::Ordering::Greater,
+                (false, true) => std::cmp::Ordering::Less,
+                (false, false) => a.time.partial_cmp(&b.time).unwrap(),
+            }
+        });
     }
     
     pub fn to_osu_format(&self) -> String {
@@ -693,11 +700,11 @@ impl<'a> IntoIterator for &'a mut HitObjects {
 }
 
 impl HitObjects {
-    pub fn iter(&self) -> std::slice::Iter<HitObject> {
+    pub fn iter(&'_ self) -> std::slice::Iter<'_, HitObject> {
         self.hit_objects.iter()
     }
     
-    pub fn iter_mut(&mut self) -> std::slice::IterMut<HitObject> {
+    pub fn iter_mut(&'_ mut self) -> std::slice::IterMut<'_, HitObject> {
         self.hit_objects.iter_mut()
     }
     

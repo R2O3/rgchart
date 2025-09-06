@@ -105,7 +105,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         match timing_point.change_type {
             TimingChangeType::Bpm => {
                 timing_points.add_timing_point(timing_points::TimingPoint {
-                    time: *timing_point.time,
+                    time: *timing_point.time as f32,
                     beat_length: bpm_to_beatlength(timing_point.value),
                     meter: 4,
                     sample_set: 1,
@@ -117,7 +117,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
             },
             TimingChangeType::Sv => {
                 timing_points.add_timing_point(timing_points::TimingPoint {
-                    time: *timing_point.time,
+                    time: *timing_point.time as f32,
                     beat_length: multiplier_to_beatlength(timing_point.value),
                     meter: 4,
                     sample_set: 1,
@@ -180,7 +180,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     let hit_object = hitobjects::HitObject {
                         x: coords as i32,
                         y: 192,
-                        time: **time,
+                        time: **time as f32,
                         object_type: 1,
                         hit_sound: hitsound_value,
                         object_params: Vec::new(),
@@ -198,7 +198,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     let hit_object = hitobjects::HitObject {
                         x: coords as i32,
                         y: 192,
-                        time: **time,
+                        time: **time as f32,
                         object_type: 128,
                         hit_sound: hitsound_value,
                         object_params: vec![slider_end_time.to_string()],

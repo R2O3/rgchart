@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct TimingPoint {
-    pub time: i32,
+    pub time: f32,
     pub beat_length: f32,
     pub meter: i32,
     pub sample_set: i32,
@@ -14,7 +14,7 @@ pub struct TimingPoint {
 
 impl TimingPoint {
     pub fn new(
-        time: i32,
+        time: f32,
         beat_length: f32,
         meter: i32,
         sample_set: i32,
@@ -84,7 +84,7 @@ impl FromStr for TimingPoint {
             return Err(format!("Expected 8 comma-separated values, found {}", parts.len()));
         }
         
-        let time = parts[0].parse::<i32>()
+        let time = parts[0].parse::<f32>()
             .map_err(|_| format!("Invalid time value: {}", parts[0]))?;
             
         let beat_length = parts[1].parse::<f32>()
@@ -176,15 +176,15 @@ impl TimingPoints {
         self.timing_points.iter().filter(|tp| tp.is_inherited()).count()
     }
     
-    pub fn start_time(&self) -> Option<i32> {
+    pub fn start_time(&self) -> Option<f32> {
         self.timing_points.first().map(|tp| tp.time)
     }
     
-    pub fn end_time(&self) -> Option<i32> {
+    pub fn end_time(&self) -> Option<f32> {
         self.timing_points.last().map(|tp| tp.time)
     }
     
-    pub fn points_in_range(&self, start_time: i32, end_time: i32) -> Vec<&TimingPoint> {
+    pub fn points_in_range(&self, start_time: f32, end_time: f32) -> Vec<&TimingPoint> {
         self.timing_points
             .iter()
             .filter(|tp| tp.time >= start_time && tp.time <= end_time)
@@ -192,7 +192,14 @@ impl TimingPoints {
     }
     
     pub fn sort_by_time(&mut self) {
-        self.timing_points.sort_by_key(|tp| tp.time);
+        self.timing_points.sort_by(|a, b| {
+            match (a.time.is_nan(), b.time.is_nan()) {
+                (true, true) => std::cmp::Ordering::Equal,
+                (true, false) => std::cmp::Ordering::Greater,
+                (false, true) => std::cmp::Ordering::Less,
+                (false, false) => a.time.partial_cmp(&b.time).unwrap(),
+            }
+        });
     }
     
     pub fn get_bpms(&self) -> Vec<f32> {
