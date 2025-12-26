@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TimingPoint {
     pub time: f32,
     pub beat_length: f32,

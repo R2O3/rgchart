@@ -59,6 +59,22 @@ impl HitObjects {
         });
     }
 
+    #[inline]
+    pub fn add_hitobject_sorted(&mut self, object: HitObject) {
+        let len = self.objects.len();
+        
+        if len == 0 || object.time >= self.objects[len - 1].time {
+            self.objects.push(object);
+            return;
+        }
+
+        let pos = self.objects.binary_search_by(|obj| 
+            obj.time.cmp(&object.time)
+        ).unwrap_or_else(|pos| pos);
+        
+        self.objects.insert(pos, object);
+    }
+
     pub fn iter(&self) -> impl Iterator<Item = &HitObject> {
         self.objects.iter()
     }

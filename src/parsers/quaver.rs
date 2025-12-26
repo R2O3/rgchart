@@ -5,9 +5,10 @@ use crate::models::common::{
     Key,
     TimingChangeType
 };
-use crate::models::generic::sound::{SoundBank, SoundEffect};
+use crate::models::generic::sound::{KeySound, SoundBank, SoundEffect};
 use crate::models::quaver;
 use crate::errors;
+use crate::utils::rhythm::calculate_beat_from_time;
 
 fn process_timing_points(timing_points: Vec<quaver::timing_points::TimingPoint>,
     chartinfo: &mut generic::chartinfo::ChartInfo,
@@ -67,53 +68,62 @@ fn process_samples(samples: Vec<quaver::sound::AudioSample>, soundbank: &mut Sou
 fn process_notes(quaver_hitobjects: Vec<quaver::hitobjects::HitObject>,
     hitobjects: &mut generic::hitobjects::HitObjects,
     chartinfo: &mut generic::chartinfo::ChartInfo,
-    bpms_times: &Vec<i32>,
+    offset: i32,
+    bpm_times: &Vec<i32>,
     bpms: &Vec<f32>,
     has_scratch: bool
     ) -> Result<(), Box<dyn std::error::Error>> {
-        use models::timeline::{HitObjectTimeline, TimelineHitObject};
+        use generic::hitobjects::HitObject;
+
         let mut key_count = chartinfo.key_count as usize;
         
-        let mut timeline: HitObjectTimeline = HitObjectTimeline::with_capacity((quaver_hitobjects.len() / 3) as usize);
-
         if has_scratch {
             key_count += 1;
         }
 
         for hitobject in quaver_hitobjects {
-            let lane = hitobject.lane() - 1;
+            let lane = hitobject.lane();
+            let key_sound = hitobject.get_generic_keysound();
+            let time = hitobject.start_time() as i32;
+
+            let beat = calculate_beat_from_time(time, offset, (&bpm_times, &bpms));
             
             if hitobject.is_ln() {
-                let slider = TimelineHitObject {
-                    time: hitobject.start_time() as i32,
-                    column: lane,
+                let slider = HitObject {
+                    time: time,
+                    beat: beat,
+                    lane: lane,
                     key: Key::slider_start(Some(hitobject.end_time().unwrap_or(0.0) as i32)),
-                    keysound: Some(hitobject.get_generic_keysound())
+                    keysound: key_sound
                 };
 
-                let slider_end = TimelineHitObject {
-                    time: hitobject.end_time().unwrap_or(0f32) as i32,
-                    column: lane,
+                let slider_end_time = hitobject.end_time().unwrap_or(0f32) as i32;
+                let end_time_beat = calculate_beat_from_time(slider_end_time, offset, (&bpm_times, &bpms));
+
+                let slider_end = HitObject {
+                    time: slider_end_time,
+                    beat: end_time_beat,
+                    lane: lane,
                     key: Key::slider_end(),
-                    keysound: None
+                    keysound: KeySound::default()
                 };
             
-                timeline.add_sorted(slider);
-                timeline.add_sorted(slider_end);
+                hitobjects.add_hitobject_sorted(slider);
+                hitobjects.add_hitobject_sorted(slider_end);
             } else {
-                timeline.add_sorted(
-                TimelineHitObject {
-                        time: hitobject.start_time() as i32,
-                        column: lane,
+                hitobjects.add_hitobject_sorted(
+                HitObject {
+                        time: time,
+                        beat: beat,
+                        lane: lane,
                         key: Key::normal(),
-                        keysound: Some(hitobject.get_generic_keysound())
+                        keysound: key_sound
                     }
                 );
             }
         }
 
         chartinfo.key_count = key_count as u8;
-        timeline.to_hitobjects(hitobjects, chartinfo.audio_offset, key_count, bpms_times, bpms);
         
         Ok(())
 }
@@ -168,12 +178,15 @@ pub(crate) fn from_qua(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
     process_soundeffects(quaver_file.sound_effects, &mut soundbank)?;
     process_timing_points(quaver_file.timing_points, &mut chartinfo, &mut timeline)?;
     process_sv(quaver_file.slider_velocities, &mut timeline)?;
+
+    let offset = chartinfo.audio_offset;
     timeline.to_timing_points(&mut timing_points, chartinfo.audio_offset);
     process_notes(
         quaver_file.hitobjects,
         &mut hitobjects, 
         &mut chartinfo,
-        &timing_points.times, 
+        offset,
+        &timing_points.bpms_times(), 
         &timing_points.bpms(),
     quaver_file.has_scratch_key)?;
 

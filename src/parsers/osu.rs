@@ -1,5 +1,5 @@
+use crate::models::generic::sound::KeySound;
 use crate::models::osu::*;
-use crate::models;
 use crate::models::generic;
 use crate::models::common::{
     GameMode,
@@ -68,11 +68,10 @@ pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
         metadata::Metadata,
         chartinfo::ChartInfo,
         timing_points::TimingPoints,
-        hitobjects::HitObjects,
+        hitobjects::{HitObjects, HitObject},
         chart::Chart,
         sound::SoundBank
     };
-    use models::timeline::{HitObjectTimeline, TimelineHitObject};
 
     let osu_file = from_osu_raw(raw_chart)?;
 
@@ -125,17 +124,14 @@ pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
         }
     }
 
-    let start_time = timing_points.times.first().copied().unwrap_or(0);
+    let start_time = *timing_points.bpms_times().first().unwrap_or(&0);
     chartinfo.audio_offset = start_time;
 
+    let bpm_times: Vec<i32> = timing_points.bpms_times();
+    let bpms: Vec<f32> = timing_points.bpms();
 
-    let bpm_changes = timing_points.bpm_changes_zipped().collect::<Vec<_>>();
-    let bpm_times: Vec<i32> = bpm_changes.iter().map(|(t, _, _)| **t).collect();
-    let bpms: Vec<f32> = bpm_changes.iter().map(|(_, _, change)| change.value).collect();
-
-    timing_points.beats.iter_mut().enumerate().for_each(|(i, beat)| {
-        let time = timing_points.times[i];
-        *beat = calculate_beat_from_time(time, start_time, (&bpm_times, &bpms));
+    timing_points.iter_mut().for_each(|b| {
+        b.beat = calculate_beat_from_time(b.time, start_time, (&bpm_times, &bpms));
     });
 
     let mut hitobjects = HitObjects::with_capacity(osu_file.hitobjects.count());
@@ -143,50 +139,48 @@ pub(crate) fn from_osu(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
     soundbank.audio_tracks.push(chartinfo.song_path.clone());
 
     let key_count = chartinfo.key_count;
-    let mut timeline = HitObjectTimeline::with_capacity(osu_file.hitobjects.count());
 
     for hit_object in osu_file.hitobjects.iter() {
         let object_time = hit_object.time as i32;
-        let object_column = hit_object.mania_column(key_count) as usize;
+        let object_column = hit_object.mania_column(key_count);
+
+        let beat = calculate_beat_from_time(object_time, start_time, (&bpm_times, &bpms));
         
         let key_sound = hit_object.get_generic_keysound(&mut soundbank);
 
         if hit_object.is_hold() {
             let end_time = hit_object.end_time().unwrap_or(object_time);
             
-            let slider_start = TimelineHitObject {
+            let slider_start = HitObject {
                 time: object_time,
-                column: object_column,
+                beat: beat,
+                lane: object_column,
                 key: Key::slider_start(Some(end_time)),
-                keysound: Some(key_sound),
+                keysound: key_sound,
             };
 
-            let slider_end = TimelineHitObject {
+            let end_time_beat = calculate_beat_from_time(end_time, start_time, (&bpm_times, &bpms));
+
+            let slider_end = HitObject {
                 time: end_time,
-                column: object_column,
+                beat: end_time_beat,
+                lane: object_column,
                 key: Key::slider_end(),
-                keysound: None,
+                keysound: KeySound::default(),
             };
 
-            timeline.add_sorted(slider_start);
-            timeline.add_sorted(slider_end);
+            hitobjects.add_hitobject_sorted(slider_start);
+            hitobjects.add_hitobject_sorted(slider_end);
         } else if hit_object.is_normal() {
-            timeline.add_sorted(TimelineHitObject {
+            hitobjects.add_hitobject_sorted(HitObject {
                 time: object_time,
-                column: object_column,
+                beat: beat,
+                lane: object_column,
                 key: Key::normal(),
-                keysound: Some(key_sound),
+                keysound: key_sound,
             });
         }
     }
-
-    timeline.to_hitobjects(
-        &mut hitobjects,
-        chartinfo.audio_offset,
-        key_count as usize,
-        &timing_points.times,
-        &timing_points.bpms(),
-    );
 
     Ok(Chart::new(metadata, chartinfo, timing_points, hitobjects, Some(soundbank)))
 }

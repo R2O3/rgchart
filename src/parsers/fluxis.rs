@@ -4,6 +4,8 @@ use crate::models::common::{
     ChartDefaults, Key, TimingChangeType
 };
 use crate::models::fluxis;
+use crate::models::generic::sound::KeySound;
+use crate::utils::rhythm::calculate_beat_from_time;
 
 fn process_timing_points(timing_points: Vec<fluxis::timing_points::TimingPoint>,
     chartinfo: &mut generic::chartinfo::ChartInfo,
@@ -45,49 +47,51 @@ fn process_sv(slider_velocities: Vec<fluxis::timing_points::ScrollVelocity>,
 fn process_notes(fluxis_hitobjects: Vec<fluxis::hitobjects::HitObject>,
     hitobjects: &mut generic::hitobjects::HitObjects,
     chartinfo: &mut generic::chartinfo::ChartInfo,
+    offset: i32,
     bpms_times: &Vec<i32>,
     bpms: &Vec<f32>
     ) -> Result<(), Box<dyn std::error::Error>> {
-        use models::timeline::{HitObjectTimeline, TimelineHitObject};
+        use generic::hitobjects;
+        
         let key_count = chartinfo.key_count as usize;
         
-        let mut timeline: HitObjectTimeline = HitObjectTimeline::with_capacity((fluxis_hitobjects.len() / 3) as usize);
-
         for hitobject in fluxis_hitobjects {
-            let lane = (hitobject.lane - 1) as usize;
+            let beat = calculate_beat_from_time(hitobject.time as i32, offset, (bpms_times, bpms));
             
             if hitobject.is_ln() {
-                let slider = TimelineHitObject {
+                let slider = hitobjects::HitObject {
                     time: hitobject.time as i32,
-                    column: lane,
+                    beat: beat,
+                    lane: hitobject.lane as u8,
                     key: Key::slider_start(Some(hitobject.end_time() as i32)),
-                    keysound: Some(hitobject.get_generic_keysound())
+                    keysound: KeySound::default()
                 };
 
-                let slider_end = TimelineHitObject {
+                let slider_end = hitobjects::HitObject {
                     time: hitobject.end_time() as i32,
-                    column: lane,
+                    beat: beat,
+                    lane: hitobject.lane as u8,
                     key: Key::slider_end(),
-                    keysound: None
+                    keysound: KeySound::default()
                 };
             
-                timeline.add_sorted(slider);
-                timeline.add_sorted(slider_end);
+                hitobjects.add_hitobject_sorted(slider);
+                hitobjects.add_hitobject_sorted(slider_end);
             } else {
                 if hitobject.is_tick() { continue }; // skipping ticks until I think of a solution for them
-                timeline.add_sorted(
-                TimelineHitObject {
+                hitobjects.add_hitobject_sorted(
+                hitobjects::HitObject {
                         time:  hitobject.time as i32,
-                        column: lane,
+                        beat: beat,
+                        lane: hitobject.lane as u8,
                         key: Key::normal(),
-                        keysound: Some(hitobject.get_generic_keysound())
+                        keysound: KeySound::default()
                     }
                 );
             }
         }
 
         chartinfo.key_count = key_count as u8;
-        timeline.to_hitobjects(hitobjects, chartinfo.audio_offset, key_count, bpms_times, bpms);
         
         Ok(())
 }
@@ -135,6 +139,8 @@ pub(crate) fn from_fsc(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
 
     let mut timeline: TimingPointTimeline = TimingPointTimeline::with_capacity(64);
 
+    let offset = fsc_file.timing_points[0].time as i32;
+
     process_timing_points(fsc_file.timing_points, &mut chartinfo, &mut timeline)?;
     process_sv(fsc_file.scroll_velocities, &mut timeline)?;
     timeline.to_timing_points(&mut timing_points, chartinfo.audio_offset);
@@ -142,7 +148,8 @@ pub(crate) fn from_fsc(raw_chart: &str) -> Result<generic::chart::Chart, Box<dyn
         fsc_file.hit_objects,
         &mut hitobjects, 
         &mut chartinfo,
-        &timing_points.times, 
+        offset,
+        &timing_points.bpms_times(), 
         &timing_points.bpms())?;
 
     Ok(Chart::new(metadata, chartinfo, timing_points, hitobjects, None))

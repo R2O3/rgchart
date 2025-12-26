@@ -9,7 +9,7 @@ pub struct HitObject {
     pub start_time: f32,
     
     #[serde(rename = "Lane")]
-    pub lane: usize,
+    pub lane: u8,
     
     #[serde(rename = "EndTime", skip_serializing_if = "Option::is_none")]
     pub endtime: Option<f32>,
@@ -42,7 +42,7 @@ impl HitObject {
         self.endtime
     }
 
-    pub fn lane(&self) -> usize {
+    pub fn lane(&self) -> u8 {
         self.lane
     }
     

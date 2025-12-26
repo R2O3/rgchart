@@ -1,7 +1,7 @@
 use crate::wasm_bindgen;
 use crate::models::common::TimingChangeType;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub struct TimingChange {
     pub change_type: TimingChangeType,
     pub value: f32,
@@ -52,6 +52,10 @@ impl TimingPoints {
         self.points.iter()
     }
 
+    pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut TimingPoint> {
+        self.points.iter_mut()
+    }
+
     pub fn bpm_changes(&self) -> impl Iterator<Item = &TimingPoint> + '_ {
         self.points
             .iter()
@@ -81,6 +85,14 @@ impl TimingPoints {
             .iter()
             .filter(|p| matches!(p.change.change_type, TimingChangeType::Bpm))
             .map(|p| p.change.value)
+            .collect()
+    }
+
+    pub fn bpms_times(&self) -> Vec<i32> {
+        self.points
+            .iter()
+            .filter(|p| matches!(p.change.change_type, TimingChangeType::Bpm))
+            .map(|p| p.time)
             .collect()
     }
 
