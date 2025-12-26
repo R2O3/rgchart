@@ -43,6 +43,12 @@ pub struct KeySound {
     pub has_custom: bool,
 }
 
+impl Default for KeySound {
+    fn default() -> Self {
+        KeySound::normal(100)
+    }
+}
+
 impl KeySound {
     pub fn of_type(volume: u8, hitsound_type: HitSoundType) -> Self  {
         Self {
@@ -183,6 +189,12 @@ pub struct SoundBank {
     #[wasm_bindgen(getter_with_clone)]
     pub sound_effects: Vec<SoundEffect>,
     sample_map: HashMap<String, usize>,
+}
+
+impl Default for SoundBank {
+    fn default() -> Self {
+        SoundBank::new()
+    }
 }
 
 #[wasm_bindgen]

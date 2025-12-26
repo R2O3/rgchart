@@ -34,6 +34,20 @@ pub struct OsuFile {
     pub hitobjects: hitobjects::HitObjects,
 }
 
+impl Default for OsuFile {
+    fn default() -> Self {
+        OsuFile {
+            general: Default::default(),
+            editor: None,
+            metadata: Default::default(),
+            difficulty: Default::default(),
+            events: Default::default(),
+            timing_points: Default::default(),
+            hitobjects: Default::default(),
+        }
+    }
+}
+
 impl OsuFile {
     pub fn to_osu_format_taiko(&self) -> String {
         let mut result = String::new();

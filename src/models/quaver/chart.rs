@@ -86,3 +86,31 @@ fn default_id() -> i32 { -1i32 }
 fn default_bpm_does_not_affect_scroll_velocity() -> bool { true }
 fn default_initial_scroll_velocity() -> f32 { 1f32 }
 fn default_has_scratch_key() -> bool { false }
+
+impl Default for QuaFile {
+    fn default() -> Self {
+        Self {
+            audio_file: String::new(),
+            song_preview_time: 0,
+            background_file: String::new(),
+            map_id: default_id(),
+            mapset_id: default_id(),
+            mode: String::new(),
+            title: String::new(),
+            artist: String::new(),
+            source: String::new(),
+            tags: String::new(),
+            creator: String::new(),
+            difficulty_name: String::new(),
+            bpm_does_not_affect_scroll_velocity: default_bpm_does_not_affect_scroll_velocity(),
+            initial_scroll_velocity: default_initial_scroll_velocity(),
+            has_scratch_key: default_has_scratch_key(),
+            editor_layers: Vec::new(),
+            custom_audio_samples: Vec::new(),
+            sound_effects: Vec::new(),
+            timing_points: Vec::new(),
+            slider_velocities: Vec::new(),
+            hitobjects: Vec::new(),
+        }
+    }
+}

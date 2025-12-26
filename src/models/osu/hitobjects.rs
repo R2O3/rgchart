@@ -39,6 +39,12 @@ impl FromStr for HitObject {
     }
 }
 
+impl Default for HitObject {
+    fn default() -> Self {
+        HitObject { x: 256, y: 192, time: 0.0, object_type: 1, hit_sound: 0, object_params: Vec::new(), hit_sample: HitSample::default() }
+    }
+}
+
 impl HitObject {
     pub fn from_str_with_mode(s: &str, mode: &OsuMode) -> Result<Self, String> {
         let parts: Vec<&str> = s.split(',').collect();

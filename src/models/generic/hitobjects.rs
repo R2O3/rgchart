@@ -1,38 +1,14 @@
 use crate::wasm_bindgen;
-use crate::models::common::{
-    Row,
-    Key,
-    KeyType,
-};
-use crate::models::generic::sound::{
-    KeySoundRow,
-};
+use crate::models::common::{Key, KeyType};
+use crate::models::generic::sound::{KeySound};
 
-#[derive(Debug)]
-#[repr(C, align(64))]
-pub struct HitObjectView<'a> {
-    pub time: &'a i32,
-    pub row: &'a [Key],
-    pub beat: &'a f32,
-    pub keysound: &'a KeySoundRow,
-    _pad: [u8; 20],
-}
-
-impl<'a> HitObjectView<'a> {
-    pub fn new(
-        time: &'a i32,
-        beat: &'a f32,
-        row: &'a [Key],
-        keysound: &'a KeySoundRow,
-    ) -> Self {
-        Self {
-            time,
-            beat,
-            row,
-            keysound,
-            _pad: [0; 20],
-        }
-    }
+#[derive(Debug, Clone)]
+pub struct HitObject {
+    pub time: i32,
+    pub beat: f32,
+    pub keysound: KeySound,
+    pub key: Key,
+    pub lane: u8,
 }
 
 // TODO: add wasm bindings for HitObject
@@ -42,63 +18,48 @@ impl<'a> HitObjectView<'a> {
 #[derive(Debug, Clone)]
 pub struct HitObjects {
     #[wasm_bindgen(skip)]
-    pub times: Vec<i32>,
-    #[wasm_bindgen(skip)]
-    pub rows: Vec<Row>,
-    #[wasm_bindgen(skip)]
-    pub beats: Vec<f32>,
-    #[wasm_bindgen(skip)]
-    pub keysounds: Vec<KeySoundRow>,
+    pub objects: Vec<HitObject>,
+}
+
+impl From<Vec<HitObject>> for HitObjects {
+    fn from(objects: Vec<HitObject>) -> Self {
+        Self { objects }
+    }
 }
 
 impl HitObjects {
-
     pub fn with_capacity(capacity: usize) -> Self {
         Self {
-            times: Vec::with_capacity(capacity),
-            keysounds: Vec::with_capacity(capacity),
-            rows: Vec::with_capacity(capacity),
-            beats: Vec::with_capacity(2_u32.pow(7) as usize)
+            objects: Vec::with_capacity(capacity),
         }
     }
 
-    pub fn new(times: Vec<i32>, keysounds: Vec<KeySoundRow>, rows: Vec<Row>, beats: Vec<f32>) -> Self {
-        Self {
-            times,
-            keysounds,
-            rows,
-            beats,
-        }
+    pub fn new(objects: Vec<HitObject>) -> Self {
+        Self { objects }
     }
 
     #[inline]
-    pub fn add_hitobject(&mut self, time: i32, beat: f32, hitsound: KeySoundRow, row: Row) {
-        if row.iter().all(|&key| key.key_type == KeyType::Empty) { return; }
-        self.times.push(time);
-        self.keysounds.push(hitsound);
-        self.beats.push(beat);
-        self.rows.push(row);
+    pub fn add_hitobject(
+        &mut self,
+        time: i32,
+        beat: f32,
+        keysound: KeySound,
+        key: Key,
+        lane: u8
+    ) {
+        if key.key_type == KeyType::Empty {
+            return;
+        }
+        self.objects.push(HitObject {
+            time,
+            beat,
+            keysound,
+            key,
+            lane,
+        });
     }
 
-
-    /// time, beat, keysounds, row
-    pub fn iter_zipped(&self) -> impl Iterator<Item = (&i32, &f32, &KeySoundRow, &Row)> {
-        self.times
-            .iter()
-            .zip(self.beats.iter())
-            .zip(self.keysounds.iter())
-            .zip(self.rows.iter())
-            .map(|(((time, beat), keysound), row)| (time, beat, keysound, row))
-    }
-
-    pub fn iter_views(&self) -> impl Iterator<Item = HitObjectView> {
-        self.times
-            .iter()
-            .zip(self.keysounds.iter())
-            .zip(self.rows.iter())
-            .zip(self.beats.iter())
-            .map(|(((time, hitsound), row), beat)| {
-                HitObjectView::new(time, beat, row, hitsound)
-            })
+    pub fn iter(&self) -> impl Iterator<Item = &HitObject> {
+        self.objects.iter()
     }
 }

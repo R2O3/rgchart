@@ -74,6 +74,12 @@ impl TimingPoint {
     }
 }
 
+impl Default for TimingPoint {
+    fn default() -> Self {
+        TimingPoint { time: 0.0, beat_length: 500.0, meter: 4, sample_set: 0, sample_index: 0, volume: 100, uninherited: true, effects: 0 }
+    }
+}
+
 impl FromStr for TimingPoint {
     type Err = String;
     
