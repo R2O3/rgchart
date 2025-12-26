@@ -1,13 +1,12 @@
 use crate::models::fluxis::metadata::{self, Colors};
 use crate::models::generic;
-use crate::models::generic::sound::{KeySound, KeySoundRow, HitSoundType};
-use crate::models::common::{KeyType, Row};
+use crate::models::generic::sound::HitSoundType;
+use crate::models::common::KeyType;
 use crate::models::fluxis::{
     chart::FscFile,
     timing_points,
     hitobjects,
 };
-use crate::utils::time::find_sliderend_time;
 
 fn get_hitsound_type(hitsound_type: HitSoundType) -> String {
     match hitsound_type {
@@ -34,63 +33,55 @@ pub(crate) fn to_fsc(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
     let timing_points = chart
         .timing_points
-        .bpm_changes_zipped()
-        .map(|(time, _, change)| timing_points::TimingPoint {
-            time: *time as f32,
-            bpm: change.value,
+        .bpm_changes()
+        .map(|tp| timing_points::TimingPoint {
+            time: tp.time as f32,
+            bpm: tp.change.value,
             ..timing_points::TimingPoint::default()
         })
         .collect();
 
     let scroll_velocities = chart
         .timing_points
-        .sv_changes_zipped()
-        .map(|(time, _, change)| timing_points::ScrollVelocity {
-            time: *time as f32,
-            multiplier: change.value,
+        .sv_changes()
+        .map(|sv| timing_points::ScrollVelocity {
+            time: sv.time as f32,
+            multiplier: sv.change.value,
             ..timing_points::ScrollVelocity::default()
         })
         .collect();
 
-    let hitobjects: Vec<(&i32, &f32, &KeySoundRow, &Row)> = chart.hitobjects.iter_zipped().collect();
     let mut fsc_hitobjects = Vec::new();
 
-    for (row_idx, (time, _, keysounds, row)) in hitobjects.iter().enumerate() {
-        for (i, key) in row.iter().enumerate() {
-            let keysound = if keysounds.is_empty {
-                KeySound::normal(100)
-            } else {
-                keysounds[i]
-            };
+    for hitobject in chart.hitobjects.iter() {
+        let time = hitobject.time as f32;
+        let lane = hitobject.lane as isize;
 
-            match key.key_type {
-                KeyType::Normal => {
-                    fsc_hitobjects.push(hitobjects::HitObject {
-                        time: **time as f32,
-                        lane: (i + 1) as isize,
-                        hitsound: get_hitsound_type(keysound.hitsound_type),
-                        ..hitobjects::HitObject::default()
-                    });
-                }
-                KeyType::SliderStart => {
-                    let slider_end_time = if let Some(time) = key.slider_end_time() {
-                        time
-                    } else {
-                        find_sliderend_time(row_idx, i, &hitobjects)
-                    };
-                    
-                    
-
-                    fsc_hitobjects.push(hitobjects::HitObject {
-                        time: **time as f32,
-                        lane: (i + 1) as isize,
-                        holdtime:   ((slider_end_time - **time) as f32),
-                        hitsound: get_hitsound_type(keysound.hitsound_type),
-                        ..hitobjects::HitObject::default()
-                    });
-                }
-                _ => continue,
+        match hitobject.key.key_type {
+            KeyType::Normal => {
+                fsc_hitobjects.push(hitobjects::HitObject {
+                    time: time,
+                    lane: lane,
+                    hitsound: get_hitsound_type(HitSoundType::Normal),
+                    ..hitobjects::HitObject::default()
+                });
             }
+            KeyType::SliderStart => {
+                let slider_end_time = if let Some(time) = hitobject.key.slider_end_time() {
+                    time
+                } else {
+                    0
+                };
+
+                fsc_hitobjects.push(hitobjects::HitObject {
+                    time: time,
+                    lane: lane,
+                    holdtime:   ((slider_end_time - hitobject.time) as f32),
+                    hitsound: get_hitsound_type(hitobject.keysound.hitsound_type),
+                    ..hitobjects::HitObject::default()
+                });
+            }
+            _ => continue,
         }
     }
 

@@ -1,10 +1,9 @@
 use crate::models::osu::*;
 use crate::models::generic;
 use crate::models::common::{
-    Row, TimingChangeType, KeyType
+    TimingChangeType, KeyType
 };
-use crate::models::generic::sound::{KeySoundRow, KeySound, HitSoundType, SoundBank};
-use crate::utils::time::find_sliderend_time;
+use crate::models::generic::sound::{HitSoundType, SoundBank};
 #[allow(unused)]
 use crate::errors;
 
@@ -20,7 +19,7 @@ fn multiplier_to_beatlength(multiplier: &f32) -> f32 {
 }
 
 #[inline(always)]
-fn column_to_coords(column: usize, key_count: usize) -> u16 {
+fn column_to_coords(column: u8, key_count: usize) -> u16 {
     (column as f32 * 512.0 / key_count as f32) as u16 + 64
 }
 
@@ -101,12 +100,12 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
     let mut timing_points = timing_points::TimingPoints::new();
 
-    for timing_point in chart.timing_points.iter_views() {
-        match timing_point.change_type {
+    for timing_point in chart.timing_points.iter() {
+        match timing_point.change.change_type {
             TimingChangeType::Bpm => {
                 timing_points.add_timing_point(timing_points::TimingPoint {
-                    time: *timing_point.time as f32,
-                    beat_length: bpm_to_beatlength(timing_point.value),
+                    time: timing_point.time as f32,
+                    beat_length: bpm_to_beatlength(&timing_point.change.value),
                     meter: 4,
                     sample_set: 1,
                     sample_index: 0,
@@ -117,8 +116,8 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
             },
             TimingChangeType::Sv => {
                 timing_points.add_timing_point(timing_points::TimingPoint {
-                    time: *timing_point.time as f32,
-                    beat_length: multiplier_to_beatlength(timing_point.value),
+                    time: timing_point.time as f32,
+                    beat_length: multiplier_to_beatlength(&timing_point.change.value),
                     meter: 4,
                     sample_set: 1,
                     sample_index: 0,
@@ -132,82 +131,75 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
     }
 
     let mut hitobjects = hitobjects::HitObjects::new();
-
     let mut soundbank = chart.soundbank.clone().unwrap_or(SoundBank::new());
-    let hitobjects_data: Vec<(&i32, &f32, &KeySoundRow, &Row)> = chart.hitobjects.iter_zipped().collect();
-    
-    for (row_idx, (time, _beat, keysounds, row)) in hitobjects_data.iter().enumerate() {
-        for (i, key) in row.iter().enumerate() {
-            let coords = column_to_coords(i, key_count as usize);
 
-            let keysound = if keysounds.is_empty {
-                KeySound::normal(100)
-            } else {
-                keysounds[i]
-            };
+    for hitobject in chart.hitobjects.iter() {
+        let time = hitobject.time as f32;
+        let lane = hitobject.lane;
+        let coords = column_to_coords(lane, key_count as usize);
 
-            let hitsound = keysound.hitsound_type;
-            let hitsound_value = match hitsound {
-                HitSoundType::Normal => 0,
-                HitSoundType::Whistle => 2,
-                HitSoundType::Finish => 4,
-                HitSoundType::Clap => 8,
-            };
+        let keysound = hitobject.keysound;
+        let hitsound = keysound.hitsound_type;
+        let hitsound_value = match hitsound {
+            HitSoundType::Normal => 0,
+            HitSoundType::Whistle => 2,
+            HitSoundType::Finish => 4,
+            HitSoundType::Clap => 8,
+        };
 
-            let custom_sample = if keysound.has_custom {
-                soundbank.get_sound_sample(keysound.sample.unwrap_or(0))
-                    .unwrap_or_default()
-            } else {
-                String::new()
-            };
+        let custom_sample = if keysound.has_custom {
+            soundbank.get_sound_sample(keysound.sample.unwrap_or(0))
+                .unwrap_or_default()
+        } else {
+            String::new()
+        };
 
-            let volume = if keysound.volume >= 100 {
-                0
-            } else {
-                keysound.volume
-            };
-            
-            let hit_sample = sound::HitSample {
-                normal_set: 0,
-                addition_set: 0,
-                index: 0,
-                volume,
-                filename: custom_sample,
-            };
-            
-            match key.key_type {
-                KeyType::Normal => {
-                    let hit_object = hitobjects::HitObject {
-                        x: coords as i32,
-                        y: 192,
-                        time: **time as f32,
-                        object_type: 1,
-                        hit_sound: hitsound_value,
-                        object_params: Vec::new(),
-                        hit_sample,
-                    };
-                    hitobjects.add_hit_object(hit_object);
-                },
-                KeyType::SliderStart => {
-                    let slider_end_time = if let Some(time) = key.slider_end_time() {
-                        time
-                    } else {
-                        find_sliderend_time(row_idx, i, &hitobjects_data)
-                    };
+        let volume = if keysound.volume >= 100 {
+            0
+        } else {
+            keysound.volume
+        };
+        
+        let hit_sample = sound::HitSample {
+            normal_set: 0,
+            addition_set: 0,
+            index: 0,
+            volume,
+            filename: custom_sample,
+        };
+        
+        match hitobject.key.key_type {
+            KeyType::Normal => {
+                let hit_object = hitobjects::HitObject {
+                    x: coords as i32,
+                    y: 192,
+                    time,
+                    object_type: 1,
+                    hit_sound: hitsound_value,
+                    object_params: Vec::new(),
+                    hit_sample,
+                };
+                hitobjects.add_hit_object(hit_object);
+            },
+            KeyType::SliderStart => {
+                let slider_end_time = if let Some(end_time) = hitobject.key.slider_end_time() {
+                    end_time
+                } else {
+                    0
+                };
 
-                    let hit_object = hitobjects::HitObject {
-                        x: coords as i32,
-                        y: 192,
-                        time: **time as f32,
-                        object_type: 128,
-                        hit_sound: hitsound_value,
-                        object_params: vec![slider_end_time.to_string()],
-                        hit_sample,
-                    };
-                    hitobjects.add_hit_object(hit_object);
-                },
-                _ => continue,
-            }
+                let hit_object = hitobjects::HitObject {
+                    x: coords as i32,
+                    y: 192,
+                    time,
+                    object_type: 128,
+                    hit_sound: hitsound_value,
+                    object_params: vec![slider_end_time.to_string()],
+                    hit_sample,
+                };
+                hitobjects.add_hit_object(hit_object);
+            },
+            _ => continue,
         }
     }
 

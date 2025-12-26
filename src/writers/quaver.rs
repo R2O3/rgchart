@@ -1,6 +1,6 @@
 use crate::models::generic;
-use crate::models::generic::sound::{KeySound, KeySoundRow, HitSoundType};
-use crate::models::common::{GameMode, KeyType, Row};
+use crate::models::generic::sound::{KeySound, HitSoundType};
+use crate::models::common::{GameMode, KeyType};
 use crate::models::quaver::{
     chart::QuaFile,
     // editor,
@@ -8,7 +8,6 @@ use crate::models::quaver::{
     timing_points,
     hitobjects,
 };
-use crate::utils::time::find_sliderend_time;
 use crate::errors;
 
 fn get_mode_string(key_count: u8) -> Result<String, Box<dyn std::error::Error>> {
@@ -74,61 +73,56 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
     let timing_points = chart
         .timing_points
-        .bpm_changes_zipped()
-        .map(|(time, _, change)| timing_points::TimingPoint {
-            start_time: *time as f32,
-            bpm: change.value,
+        .bpm_changes()
+        .map(|tp| timing_points::TimingPoint {
+            start_time: tp.time as f32,
+            bpm: tp.change.value,
         })
         .collect();
 
     let slider_velocities = chart
         .timing_points
-        .sv_changes_zipped()
-        .map(|(time, _, change)| timing_points::SliderVelocity {
-            start_time: *time as f32,
-            multiplier: Some(change.value),
+        .sv_changes()
+        .map(|sv| timing_points::SliderVelocity {
+            start_time: sv.time as f32,
+            multiplier: Some(sv.change.value),
         })
         .collect();
 
-    let hitobjects: Vec<(&i32, &f32, &KeySoundRow, &Row)> = chart.hitobjects.iter_zipped().collect();
     let mut qua_hitobjects = Vec::new();
 
-    for (row_idx, (time, _, keysounds, row)) in hitobjects.iter().enumerate() {
-        for (i, key) in row.iter().enumerate() {
-            let keysound = if keysounds.is_empty {
-                KeySound::normal(100)
-            } else {
-                keysounds[i]
-            };
+    for hitobject in chart.hitobjects.iter() {
+        let time = hitobject.time as f32;
+        let lane = hitobject.lane + 1; // Quaver uses 1-indexed lanes
+        let keysound = hitobject.keysound;
 
-            match key.key_type {
-                KeyType::Normal => {
-                    qua_hitobjects.push(hitobjects::HitObject {
-                        start_time: **time as f32,
-                        lane: i + 1,
-                        hit_sound: get_hitsound_type(keysound.hitsound_type),
-                        key_sounds: create_keysounds(keysound),
-                        ..Default::default()
-                    });
-                }
-                KeyType::SliderStart => {
-                    let slider_end_time = if let Some(time) = key.slider_end_time() {
-                        time
-                    } else {
-                        find_sliderend_time(row_idx, i, &hitobjects)
-                    };
-
-                    qua_hitobjects.push(hitobjects::HitObject {
-                        start_time: **time as f32,
-                        lane: i + 1,
-                        endtime: Some(slider_end_time as f32),
-                        hit_sound: get_hitsound_type(keysound.hitsound_type),
-                        key_sounds: create_keysounds(keysound),
-                        ..Default::default()
-                    });
-                }
-                _ => continue,
+        match hitobject.key.key_type {
+            KeyType::Normal => {
+                qua_hitobjects.push(hitobjects::HitObject {
+                    start_time: time,
+                    lane,
+                    hit_sound: get_hitsound_type(keysound.hitsound_type),
+                    key_sounds: create_keysounds(keysound),
+                    ..Default::default()
+                });
             }
+            KeyType::SliderStart => {
+                let slider_end_time = if let Some(end_time) = hitobject.key.slider_end_time() {
+                    end_time as f32
+                } else {
+                    0.0
+                };
+
+                qua_hitobjects.push(hitobjects::HitObject {
+                    start_time: time,
+                    lane,
+                    endtime: Some(slider_end_time),
+                    hit_sound: get_hitsound_type(keysound.hitsound_type),
+                    key_sounds: create_keysounds(keysound),
+                    ..Default::default()
+                });
+            }
+            _ => continue,
         }
     }
 
