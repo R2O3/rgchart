@@ -136,7 +136,7 @@ fn process_notes(
     Ok(())
 }
 
-pub(crate) fn from_qua(
+pub(crate) fn from_qua_generic(
     raw_chart: &str,
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
     let quaver_file = QuaFile::from_yaml(&raw_chart)?;

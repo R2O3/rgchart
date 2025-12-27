@@ -11,7 +11,7 @@ fn get_hitsound_type(hitsound_type: HitSoundType) -> String {
     }
 }
 
-pub(crate) fn to_fsc(
+pub(crate) fn to_fsc_generic(
     chart: &GenericManiaChart,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let metadata = fluxis::Metadata {

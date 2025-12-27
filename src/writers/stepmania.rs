@@ -92,7 +92,7 @@ fn pad_measure(rows: &[HitObjectRow], range: &MeasureRange) -> Measure {
     padded_measure
 }
 
-pub(crate) fn to_sm(chart: &GenericManiaChart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_sm_generic(chart: &GenericManiaChart) -> Result<String, Box<dyn std::error::Error>> {
     let mut template = String::new();
     let mut bpm_template = String::new();
     let mut notes_template = String::new();

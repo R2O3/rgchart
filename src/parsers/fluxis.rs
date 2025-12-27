@@ -95,7 +95,7 @@ fn process_notes(
     Ok(())
 }
 
-pub(crate) fn from_fsc(
+pub(crate) fn from_fsc_generic(
     raw_chart: &str,
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
     let fsc_file = FscFile::from_json(&raw_chart)?;

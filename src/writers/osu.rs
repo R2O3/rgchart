@@ -23,7 +23,7 @@ fn column_to_coords(lane: u8, key_count: usize) -> u16 {
     ((lane - 1) as f32 * 512.0 / key_count as f32).ceil() as u16
 }
 
-pub(crate) fn to_osu(
+pub(crate) fn to_osu_generic(
     chart: &GenericManiaChart,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let key_count = chart.chartinfo.key_count;

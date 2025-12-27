@@ -23,7 +23,7 @@ fn validate_mode_mania(mode: GameMode) -> Result<bool, Box<dyn std::error::Error
     Ok(true)
 }
 
-pub(crate) fn from_osu_raw(raw_chart: &str) -> Result<OsuFile, Box<dyn std::error::Error>> {
+pub(crate) fn from_osu(raw_chart: &str) -> Result<OsuFile, Box<dyn std::error::Error>> {
     let mut general: osu::General = Default::default();
     let mut editor: osu::Editor = Default::default();
     let mut metadata: osu::Metadata = Default::default();
@@ -68,10 +68,10 @@ pub(crate) fn from_osu_raw(raw_chart: &str) -> Result<OsuFile, Box<dyn std::erro
     Ok(osu_file)
 }
 
-pub(crate) fn from_osu(
+pub(crate) fn from_osu_generic(
     raw_chart: &str,
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
-    let osu_file = from_osu_raw(raw_chart)?;
+    let osu_file = from_osu(raw_chart)?;
 
     validate_mode_mania(osu_file.general.get_mode())?;
 

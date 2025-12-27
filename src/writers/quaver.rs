@@ -36,7 +36,7 @@ fn create_keysounds(keysound: KeySound) -> Vec<quaver::KeySound> {
     }
 }
 
-pub(crate) fn to_qua(
+pub(crate) fn to_qua_generic(
     chart: &GenericManiaChart,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let key_count = chart.chartinfo.key_count;

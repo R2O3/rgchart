@@ -233,7 +233,7 @@ fn process_notes(
     HitObjects::new(flattened)
 }
 
-pub(crate) fn from_sm(
+pub(crate) fn from_sm_generic(
     raw_chart: &str,
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
     let uncommented_chart = remove_comments(raw_chart, "//");

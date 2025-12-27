@@ -6,8 +6,8 @@ fn sm_to_osu_test() {
     parse_and_convert!(
         sm_to_osu,
         "./tests/Maps/etterna/Kil_ChineseTea/ct.sm",
-        parse::from_sm,
-        write::to_osu,
+        parse::from_sm_generic,
+        write::to_osu_generic,
         true
     );
 }
@@ -17,8 +17,8 @@ fn qua_to_osu_test() {
     parse_and_convert!(
         qua_to_osu,
         "./tests/Maps/quaver/2366_177_NewNonBiyori/19248.qua",
-        parse::from_qua,
-        write::to_osu,
+        parse::from_qua_generic,
+        write::to_osu_generic,
         true
     );
 }
@@ -28,8 +28,8 @@ fn fsc_to_osu_test() {
     parse_and_convert!(
         fsc_to_osu,
         "./tests/Maps/fluXis/1463_IamAControversy/1749337797.fsc",
-        parse::from_fsc,
-        write::to_osu,
+        parse::from_fsc_generic,
+        write::to_osu_generic,
         true
     );
 }
