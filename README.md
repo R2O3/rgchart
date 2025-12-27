@@ -40,41 +40,85 @@ cargo add rgc-chart
 #### Parsing Charts
 ```rust
 use rgc_chart::parse;
-use rgc_chart::Chart;
+
+// Parse an osu! chart from string to a generic mania chart
+let osu_chart = parse::from_osu_generic(raw_osu_string).expect("Failed to parse osu! chart");
+
+// Parse a Stepmania chart from string to a generic mania chart
+let sm_chart = parse::from_sm_generic(raw_sm_string).expect("Failed to parse Stepmania chart");
+
+// Parse a Quaver chart from string to a generic mania chart
+let qua_chart = parse::from_qua_generic(raw_qua_string).expect("Failed to parse Quaver chart");
+
+// Parse a fluXis chart from string to a generic mania chart
+let fsc_chart = parse::from_fsc_generic(raw_qua_string).expect("Failed to parse fluXis chart");
+```
+
+to parse charts in their original structures:
+```rust
+use rgc_chart::FscFile;
+use rgc_chart::OsuFile;
+use rgc_chart::QuaFile;
 
 // Parse an osu! chart from string
-let osu_chart = parse::from_osu(raw_osu_string).expect("Failed to parse osu! chart");
-
-// Parse a Stepmania chart from string
-let sm_chart = parse::from_sm(raw_sm_string).expect("Failed to parse Stepmania chart");
+let osu_chart = OsuFile::from_str(raw_osu_string).expect("Failed to parse osu! chart");
 
 // Parse a Quaver chart from string
-let qua_chart = parse::from_qua(raw_qua_string).expect("Failed to parse Quaver chart");
+let qua_chart = QuaFile::from_str(raw_qua_string).expect("Failed to parse Quaver chart");
 
 // Parse a fluXis chart from string
-let qua_chart = parse::from_fsc(raw_qua_string).expect("Failed to parse fluXis chart");
+let fsc_chart = FscFile::from_str(raw_fsc_string).expect("Failed to parse fluXis chart");
 ```
 
 #### Writing Charts
 ```rust
 use rgc_chart::parse;
 use rgc_chart::write;
-use rgc_chart::Chart;
+use rgc_chart::GenericManiaChart;
 
-let chart: Chart = parse::from_osu(raw_osu_string).expect("Failed to parse osu! chart");
+let chart: GenericManiaChart = parse::from_osu_generic(raw_osu_string).expect("Failed to parse osu! chart");
 
-// Write to to osu! format
-let osu_string = write::to_osu(&chart);
+// Write from generic mania chart to to osu! format
+let osu_string = write::to_osu_generic(&chart);
 
-// Write to Stepmania format
-let sm_string = write::to_sm(&chart);
+// Write from generic mania chart to Stepmania format
+let sm_string = write::to_sm_generic(&chart);
 
-// Write to Quaver format
-let qua_string = write::to_qua(&chart);
+// Write from generic mania chart to Quaver format
+let qua_string = write::to_qua_generic(&chart);
 
-// Write to fluXis format
-let fsc_string = write::To_fsc(&chart);
+// Write from generic mania chart to fluXis format
+let fsc_string = write::To_fsc_generic(&chart);
 ```
+
+to write charts from their original structures:
+```rust
+use rgc_chart::FscFile;
+use rgc_chart::OsuFile;
+use rgc_chart::QuaFile;
+
+// Write from OsuFile to to osu! format
+let osu_string = osu_chart.to_osu_format_mania(soundbank);
+
+// assuming you don't have a soundbank
+let osu_string = osu_chart.to_osu_format_mania_no_soundbank();
+
+// other modes for osu!, it will interprete the hit objects values as is for the mode you're writing to.
+let osu_string = osu_chart.to_osu_format();
+// or
+let osu_string = osu_chart.to_osu_format_standard(soundbank);
+
+let osu_string = osu_chart.to_osu_format_taiko(soundbank);
+let osu_string = osu_chart.to_osu_format_catch(soundbank);
+
+// Write from QuaFile to Quaver format
+let qua_string = qua_chart.to_str().expect("Failed to write Quaver chart");
+
+// Write from FscFile to fluXis format
+let fsc_string = fsc_chart.to_str().expect("Failed to write fluXis chart");
+```
+
+as of now you can't parse/write Sm files in their original structures.
 
 #### Generic Mania Chart Structure
 The `GenericManiaChart` contains all the relevant chart information:
@@ -220,34 +264,36 @@ const rgcChart = require('rgc-chart');
 
 you may need to do ``await rgcChart.default()`` after importing if you've imported it in a script tag (with type="module") or you get an error like ``Uncaught TypeError: Cannot read properties of undefined (reading '__wbindgen_malloc')``
 
+As of now you can't parse/write using the original structures in JS/TS, will be supported in the *near* future.
+
 #### Parsing Charts
 ```javascript
-// Parse an osu! chart from string
-const chart = rgcChart.parse_from_osu(rawOsuString);
+// Parse an osu! chart from string to a generic mania chart
+const OsuChart = rgcChart.parseFromOsuGeneric(rawOsuString);
 
-// Parse a Stepmania chart from string
-const chart = rgcChart.parse_from_sm(rawSmString);
+// Parse a Stepmania chart from string to a generic mania chart
+const SmChart = rgcChart.parseFromSmGeneric(rawSmString);
 
-// Parse a Quaver chart from string
-const chart = rgcChart.parse_from_qua(rawQuaString);
+// Parse a Quaver chart from string to a generic mania chart
+const QuaChart = rgcChart.parseFromQuaGeneric(rawQuaString);
 
-// Parse a fluXis chart from string
-const chart = rgcChart.parse_from_fsc(rawFscString);
+// Parse a fluXis chart from string to a generic mania chart
+const FscChart = rgcChart.parseFromFscGeneric(rawFscString);
 ```
 
 #### Writing Charts
 ```javascript
-// write to osu! format
-const osuString = rgcChart.write_to_osu(chart);
+// write from generic mania chart to osu! format
+const osuString = rgcChart.writeToOsuGeneric(chart);
 
-// write to Stepmania format
-const smString = rgcChart.write_to_sm(chart);
+// write from generic mania chart to Stepmania format
+const smString = rgcChart.writeToSmGeneric(chart);
 
-// write to Quaver format
-const quaString = rgcChart.write_to_qua(chart);
+// write from generic mania chart to Quaver format
+const quaString = rgcChart.writeToQuaGeneric(chart);
 
-// write to fluXis format
-const fscString = rgcChart.write_to_fsc(chart);
+// write from generic mania chart to fluXis format
+const fscString = rgcChart.writeToFscGeneric(chart);
 ```
 
 #### TypeScript Types
