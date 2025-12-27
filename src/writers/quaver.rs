@@ -145,6 +145,6 @@ pub(crate) fn to_qua_generic(
         hitobjects: qua_hitobjects,
     };
 
-    let yaml_string = QuaFile::to_yaml(&qua_chart)?;
+    let yaml_string = QuaFile::to_str(&qua_chart)?;
     Ok(yaml_string)
 }

@@ -95,6 +95,6 @@ pub(crate) fn to_fsc_generic(
         ..FscFile::default()
     };
 
-    let json_string = FscFile::to_json(&fsc_chart)?;
+    let json_string = FscFile::to_str(&fsc_chart)?;
     Ok(json_string)
 }

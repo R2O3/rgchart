@@ -73,11 +73,11 @@ pub struct QuaFile {
 }
 
 impl QuaFile {
-    pub fn to_yaml(&self) -> Result<String, serde_yaml_ng::Error> {
+    pub fn to_str(&self) -> Result<String, serde_yaml_ng::Error> {
         serde_yaml_ng::to_string(self)
     }
 
-    pub fn from_yaml(yaml: &str) -> Result<Self, serde_yaml_ng::Error> {
+    pub fn from_str(yaml: &str) -> Result<Self, serde_yaml_ng::Error> {
         serde_yaml_ng::from_str(yaml)
     }
 }

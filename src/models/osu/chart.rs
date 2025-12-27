@@ -1,5 +1,5 @@
 use std::fmt::{self, Display, Formatter};
-use crate::models::{generic::sound::SoundBank, osu::*};
+use crate::{models::{generic::sound::SoundBank, osu::*}, parsers::osu::from_osu};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum OsuMode {
@@ -44,6 +44,12 @@ impl Default for OsuFile {
             timing_points: Default::default(),
             hitobjects: Default::default(),
         }
+    }
+}
+
+impl OsuFile {
+    pub fn from_str(str: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        from_osu(str)
     }
 }
 

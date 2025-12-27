@@ -93,6 +93,12 @@ pub struct FscFile {
 }
 
 impl FscFile {
+    pub fn from_str(json: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
+    }
+}
+
+impl FscFile {
     pub const MIN_KEYMODE: isize = 1;
     pub const MAX_KEYMODE: isize = -1;
     
@@ -119,11 +125,7 @@ impl FscFile {
         }
     }
     
-    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
-        serde_json::from_str(json)
-    }
-    
-    pub fn to_json(&self) -> Result<String, serde_json::Error> {
+    pub fn to_str(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
     

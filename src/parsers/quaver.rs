@@ -139,7 +139,7 @@ fn process_notes(
 pub(crate) fn from_qua_generic(
     raw_chart: &str,
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
-    let quaver_file = QuaFile::from_yaml(&raw_chart)?;
+    let quaver_file = QuaFile::from_str(&raw_chart)?;
 
     let key_count = match quaver_file.mode.as_str() {
         "Keys4" => 4,
