@@ -8,6 +8,7 @@ use crate::models::common::{
 use crate::models::generic::sound::{KeySound, SoundBank, SoundEffect};
 use crate::models::quaver;
 use crate::errors;
+use crate::models::timeline::TimelineOps;
 use crate::utils::rhythm::calculate_beat_from_time;
 
 fn process_timing_points(timing_points: Vec<quaver::timing_points::TimingPoint>,

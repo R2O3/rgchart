@@ -5,6 +5,7 @@ use crate::models::common::{
 };
 use crate::models::fluxis;
 use crate::models::generic::sound::KeySound;
+use crate::models::timeline::TimelineOps;
 use crate::utils::rhythm::calculate_beat_from_time;
 
 fn process_timing_points(timing_points: Vec<fluxis::timing_points::TimingPoint>,

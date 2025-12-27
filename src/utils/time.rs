@@ -1,4 +1,4 @@
-use crate::models::common::{KeyType, Row, TimingChangeType};
+use crate::models::common::{KeyType, HitObjectRow, TimingChangeType};
 use crate::models::generic::sound::KeySoundRow;
 
 #[inline(always)]
@@ -71,7 +71,7 @@ pub fn merge_bpm_and_stops(
 pub fn find_sliderend_time(
     start_idx: usize,
     key_idx: usize,
-    hitobjects: &[(&i32, &f32, &KeySoundRow, &Row)],
+    hitobjects: &[(&i32, &f32, &KeySoundRow, &HitObjectRow)],
 ) -> i32 {
     if start_idx >= hitobjects.len() {
         return 0;
@@ -81,7 +81,7 @@ pub fn find_sliderend_time(
     let slice = &hitobjects[start_idx + 1..];
     
     for (time, _, _, row) in slice {
-        if row[key_idx].key_type == KeyType::SliderEnd {
+        if row.keys[key_idx].key_type == KeyType::SliderEnd {
             return **time
         }
     }

@@ -1,11 +1,12 @@
 use crate::models;
-use crate::models::generic;
 use crate::models::common::{
     ChartDefaults,
     Key,
     KeyType,
     Measure,
+    HitObjectRow
 };
+use crate::models::timeline::HitObjectTimeline;
 use crate::utils::math::approx_eq;
 use crate::utils::string::add_key_value_template;
 use crate::utils::time::to_seconds;
@@ -34,26 +35,26 @@ fn sm_row_to_str(row: &[Key]) -> String {
 }
 
 #[inline]
-fn pad_measure(rows: &generic::hitobjects::HitObjects, range: &MeasureRange) -> Measure {
-    let key_count = rows.iter_zipped().next().map_or(0, |row| row.3.len());
+fn pad_measure(rows: &[HitObjectRow], range: &MeasureRange) -> Measure {
+    let key_count = rows.first().map_or(0, |row| row.keys.len());
 
     if range.is_empty() {
-        return vec![vec![Key::empty(); key_count]; 4];
+        return vec![HitObjectRow::empty(0, 0.0, key_count); 4];
     }
 
-    let measure: Vec<_> = rows.iter_zipped()
+    let measure: Vec<&HitObjectRow> = rows.iter()
         .skip(range.0)
         .take(range.1 - range.0)
         .collect();
 
     if measure.is_empty() {
-        return vec![vec![Key::empty(); key_count]; 4];
+        return vec![HitObjectRow::empty(0, 0.0, key_count); 4];
     }
     
-
-    let measure_start_beat = measure[0].1;
+    let measure_start_beat = measure[0].beat;
+    let measure_start_time = measure[0].time;
     let normalized_measure: Vec<_> = measure.iter()
-        .map(|row| (row.0, row.1 - measure_start_beat, row.2, row.3))
+        .map(|row| (row.time, row.beat - measure_start_beat, &row.keys))
         .collect();
 
     let mut minimal_beat_diff = 4.0;
@@ -77,16 +78,22 @@ fn pad_measure(rows: &generic::hitobjects::HitObjects, range: &MeasureRange) -> 
     for &expected_beat in &expected_beats {
         if let Some(row) = measure_iter.peek() {
             if approx_eq(row.1, expected_beat, 0.15) {
-                padded_measure.push(row.3.clone());
+                padded_measure.push(HitObjectRow {
+                    time: row.0,
+                    beat: measure_start_beat + expected_beat,
+                    keys: row.2.clone(),
+                });
                 measure_iter.next();
                 continue;
             }
         }
-        padded_measure.push(vec![Key::empty(); key_count]);
+        let empty_time = measure_start_time + ((expected_beat / 4.0) * 1000.0) as i32;
+        padded_measure.push(HitObjectRow::empty(empty_time, measure_start_beat + expected_beat, key_count));
     }
 
     padded_measure
 }
+
 
 pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
     let mut template = String::new();
@@ -102,13 +109,19 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
     let beats_per_measure = 4.0;
     let beats_per_measure_scaled = scale_factor * beats_per_measure;
 
-    let mut measure_indices: Vec<MeasureRange>  = Vec::with_capacity(85);
-    let mut padded_measures: Vec<Measure> = Vec::with_capacity(chart.hitobjects.times.len() * 2);
-    let bpms: Vec<_> = chart.timing_points.bpm_changes_views().collect();
+    let key_count = chart.hitobjects.iter()
+        .map(|obj| obj.lane as usize + 1)
+        .max()
+        .unwrap_or(4);
+    let rows = HitObjectTimeline::to_rows(&chart.hitobjects.objects, key_count);
+
+    let mut measure_indices: Vec<MeasureRange> = Vec::with_capacity(85);
+    let mut padded_measures: Vec<Measure> = Vec::with_capacity(rows.len() * 2);
+    let bpms: Vec<_> = chart.timing_points.bpm_changes().collect();
 
     // get measures
-    for (row_index, beat) in chart.hitobjects.beats.iter().enumerate() {
-        
+    for (row_index, row) in rows.iter().enumerate() {
+        let beat = row.beat;
         let beat_scaled = (beat * scale_factor).round();
         let measure = (beat_scaled / beats_per_measure_scaled) as u32;
 
@@ -126,23 +139,23 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
             
             current_measure_index = row_index;
             prev_measure = measure;
-            prev_measure_beat = *beat;
+            prev_measure_beat = beat;
         }
-        prev_beat = *beat;
+        prev_beat = beat;
     }
-    measure_indices.push(MeasureRange(current_measure_index, chart.hitobjects.rows.len(), false));
+    measure_indices.push(MeasureRange(current_measure_index, rows.len(), false));
 
     for measure_range in measure_indices {
-        padded_measures.push(pad_measure(&chart.hitobjects, &measure_range));
+        padded_measures.push(pad_measure(&rows, &measure_range));
     }
 
     // process bpms
     let last_bpm_beat = bpms.last().unwrap().beat;
     for bpm in bpms {
         if bpm.beat < last_bpm_beat {
-            add_key_value_template(&mut bpm_template, &bpm.beat.to_string(), "=", &bpm.value.to_string(), ",\n");
+            add_key_value_template(&mut bpm_template, &bpm.beat.to_string(), "=", &bpm.change.value.to_string(), ",\n");
         } else {
-            add_key_value_template(&mut bpm_template, &bpm.beat.to_string(), "=", &bpm.value.to_string(), "\n");
+            add_key_value_template(&mut bpm_template, &bpm.beat.to_string(), "=", &bpm.change.value.to_string(), "\n");
         }
     }
 
@@ -166,7 +179,7 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
         notes_template.push_str(&(measure_index + 1).to_string());
         notes_template.push('\n');
         for row in measure {
-            notes_template.push_str(&sm_row_to_str(row));
+            notes_template.push_str(&sm_row_to_str(&row.keys));
             notes_template.push('\n');
         }
         if measure_index != last_measure_index { notes_template.push_str(", "); }

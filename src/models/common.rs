@@ -28,8 +28,24 @@ def_varied_type_enum!(pub ChartDefaults {
     HITSOUND: [u8; 4] => [0, 0, 0, 0],
 });
 
-pub type Row = Vec<Key>;
-pub type Measure = Vec<Row>;
+#[derive(Clone)]
+pub struct HitObjectRow {
+    pub time: i32,
+    pub beat: f32,
+    pub keys: Vec<Key>
+}
+
+impl HitObjectRow {
+    pub fn empty(time: i32, beat: f32, key_count: usize) -> Self {
+        HitObjectRow {
+            time,
+            beat,
+            keys: vec![Key::empty(); key_count]
+        }
+    }
+}
+
+pub type Measure = Vec<HitObjectRow>;
 
 #[wasm_bindgen]
 #[derive(Debug, Clone, Copy, PartialEq)]

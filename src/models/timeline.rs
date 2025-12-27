@@ -1,22 +1,13 @@
+use std::ops::{Index, IndexMut};
+use std::collections::VecDeque;
+use crate::models::generic::hitobjects::HitObject;
+use crate::models::generic::sound::KeySound;
 use crate::models::generic::{
-    hitobjects::HitObjects,
     timing_points::TimingPoints,
     timing_points::TimingChange,
-    sound::KeySound,
-    sound::KeySoundRow,
 };
-use crate::models::common::{Key, TimingChangeType, KeyType};
+use crate::models::common::{Key, KeyType, HitObjectRow, TimingChangeType};
 use crate::utils::rhythm::calculate_beat_from_time;
-use std::ops::{Index, IndexMut};
-
-#[derive(Debug, Clone, Copy)]
-#[repr(C)]
-pub struct TimelineHitObject {
-    pub time: i32,
-    pub column: usize,
-    pub key: Key,
-    pub keysound: Option<KeySound>
-}
 
 #[derive(Debug, Clone, Copy)]
 #[repr(C)]
@@ -26,36 +17,241 @@ pub struct TimelineTimingPoint {
     pub change_type: TimingChangeType,
 }
 
-pub struct Timeline<Item> {
-    timeline: Vec<Item>,
+pub trait TimelineOps<Item> {
+    fn timeline(&self) -> &Vec<Item>;
+    fn timeline_mut(&mut self) -> &mut Vec<Item>;
+    fn is_sorted(&self) -> bool;
+    fn set_sorted(&mut self, sorted: bool);
+    fn item_time(item: &Item) -> i32;
+
+    fn with_capacity(capacity: usize) -> Self where Self: Sized;
+
+    fn new() -> Self where Self: Sized;
+
+    #[inline]
+    fn add(&mut self, timeline_object: Item) {
+        if self.is_sorted() && !self.timeline().is_empty() {
+            let is_sorted = Self::item_time(&timeline_object) >= Self::item_time(self.timeline().last().unwrap());
+            self.set_sorted(is_sorted);
+        }
+        self.timeline_mut().push(timeline_object);
+    }
+
+    #[inline]
+    fn len(&self) -> usize {
+        self.timeline().len()
+    }
+
+    #[inline]
+    fn is_empty(&self) -> bool {
+        self.timeline().is_empty()
+    }
+
+    #[inline]
+    fn reserve(&mut self, additional: usize) {
+        self.timeline_mut().reserve(additional);
+    }
+
+    #[inline]
+    fn shrink_to_fit(&mut self) {
+        self.timeline_mut().shrink_to_fit();
+    }
+
+    #[inline]
+    fn add_sorted(&mut self, timeline_object: Item) {
+        let len = self.timeline().len();
+        
+        if len == 0 || Self::item_time(&timeline_object) >= Self::item_time(&self.timeline()[len - 1]) {
+            self.timeline_mut().push(timeline_object);
+            return;
+        }
+
+        let pos = self.timeline().binary_search_by(|obj| 
+            Self::item_time(obj).cmp(&Self::item_time(&timeline_object))
+        ).unwrap_or_else(|pos| pos);
+        
+        self.timeline_mut().insert(pos, timeline_object);
+    }
+
+    #[inline]
+    fn sort(&mut self) {
+        if !self.is_sorted() {
+            self.timeline_mut().sort_unstable_by(|a, b| Self::item_time(a).cmp(&Self::item_time(b)));
+            self.set_sorted(true);
+        }
+    }
+}
+
+pub struct HitObjectTimeline;
+
+impl HitObjectTimeline {
+    pub fn to_rows(hitobjects: &[HitObject], key_count: usize) -> Vec<HitObjectRow> {
+        if hitobjects.is_empty() {
+            return Vec::new();
+        }
+
+        let mut rows = Vec::new();
+        let mut temp_row = vec![Key::empty(); key_count];
+        
+        let mut current_time = hitobjects[0].time;
+        let mut i = 0;
+        
+        while i < hitobjects.len() {            
+            while i < hitobjects.len() && hitobjects[i].time == current_time {
+                let obj = &hitobjects[i];
+                let lane = obj.lane as usize;
+                
+                if lane < key_count {
+                    match obj.key.key_type {
+                        KeyType::Normal => {
+                            if temp_row[lane].key_type != KeyType::SliderStart {
+                                temp_row[lane] = obj.key;
+                            }
+                        },
+                        KeyType::SliderStart => {
+                            temp_row[lane] = obj.key;
+                        },
+                        KeyType::SliderEnd => {
+                            if temp_row[lane].key_type != KeyType::SliderStart {
+                                temp_row[lane] = obj.key;
+                            }
+                        },
+                        _ => {}
+                    }
+                }
+                i += 1;
+            }
+            
+            rows.push(HitObjectRow {
+                time: current_time,
+                beat: hitobjects[i - 1].beat,
+                keys: temp_row.clone(),
+            });
+            
+            if i < hitobjects.len() {
+                current_time = hitobjects[i].time;
+                temp_row.fill(Key::empty());
+            }
+        }
+        
+        rows
+    }
+
+    pub fn flatten_rows(rows: &[HitObjectRow], key_count: usize) -> Vec<HitObject> {
+        let mut result = Vec::new();
+        
+        let mut slider_start_queues: Vec<VecDeque<usize>> = vec![VecDeque::new(); key_count];
+        let mut slider_end_indices = Vec::new();
+        
+        for row in rows {
+            for (lane_idx, key) in row.keys.iter().enumerate() {
+                if lane_idx >= key_count {
+                    continue;
+                }
+                
+                if key.key_type == KeyType::Empty {
+                    continue;
+                }
+                
+                let hit_object = HitObject {
+                    time: row.time,
+                    beat: row.beat,
+                    keysound: KeySound::default(),
+                    key: *key,
+                    lane: (lane_idx + 1) as u8,
+                };
+                
+                let index = result.len();
+                result.push(hit_object);
+                
+                match key.key_type {
+                    KeyType::SliderStart => {
+                        slider_start_queues[lane_idx].push_back(index);
+                    }
+                    KeyType::SliderEnd => {
+                        slider_end_indices.push(index);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        
+        for &end_idx in &slider_end_indices {
+            let end_time = result[end_idx].time;
+            let lane = result[end_idx].lane as usize;
+            
+            if lane == 0 || lane > key_count {
+                continue;
+            }
+            
+            let queue_idx = lane - 1;
+            let queue = &mut slider_start_queues[queue_idx];
+            
+            if queue.is_empty() {
+                eprintln!("Warning: SliderEnd at time {} lane {} has no matching SliderStart", end_time, lane);
+                continue;
+            }
+            
+            let mut matched_idx = None;
+            for (i, &start_idx) in queue.iter().enumerate() {
+                if result[start_idx].time <= end_time {
+                    matched_idx = Some(i);
+                } else {
+                    break;
+                }
+            }
+            
+            if let Some(idx) = matched_idx {
+                let start_idx = queue.remove(idx).unwrap();
+                result[start_idx].key.slider_end_time = Some(end_time);
+            } else {
+                eprintln!("Warning: SliderEnd at time {} lane {} has no matching SliderStart before it", end_time, lane);
+            }
+        }
+        
+        for (lane_idx, queue) in slider_start_queues.iter().enumerate() {
+            if !queue.is_empty() {
+                eprintln!("Warning: {} unmatched SliderStart(s) in lane {}", queue.len(), lane_idx + 1);
+            }
+        }
+        
+        result
+    }
+}
+
+pub struct TimingPointTimeline {
+    timeline: Vec<TimelineTimingPoint>,
     is_sorted: bool,
 }
 
-pub trait TimelineItem {
-    fn time(&self) -> i32;
-}
-
-impl TimelineItem for TimelineHitObject {
-    fn time(&self) -> i32 {
-        self.time
-    }
-}
-
-impl TimelineItem for TimelineTimingPoint {
-    fn time(&self) -> i32 {
-        self.time
-    }
-}
-
-pub type HitObjectTimeline = Timeline<TimelineHitObject>;
-pub type TimingPointTimeline = Timeline<TimelineTimingPoint>;
-
-impl<Item> Timeline<Item>
-where
-    Item: TimelineItem,
-{
+impl TimelineOps<TimelineTimingPoint> for TimingPointTimeline {
     #[inline]
-    pub fn with_capacity(capacity: usize) -> Self {
+    fn timeline(&self) -> &Vec<TimelineTimingPoint> {
+        &self.timeline
+    }
+
+    #[inline]
+    fn timeline_mut(&mut self) -> &mut Vec<TimelineTimingPoint> {
+        &mut self.timeline
+    }
+
+    #[inline]
+    fn is_sorted(&self) -> bool {
+        self.is_sorted
+    }
+
+    #[inline]
+    fn set_sorted(&mut self, sorted: bool) {
+        self.is_sorted = sorted;
+    }
+
+    #[inline]
+    fn item_time(item: &TimelineTimingPoint) -> i32 {
+        item.time
+    }
+
+    #[inline]
+    fn with_capacity(capacity: usize) -> Self {
         Self {
             timeline: Vec::with_capacity(capacity),
             is_sorted: true,
@@ -63,136 +259,10 @@ where
     }
 
     #[inline]
-    pub fn new() -> Self {
+    fn new() -> Self {
         Self {
             timeline: Vec::new(),
             is_sorted: true,
-        }
-    }
-
-    #[inline]
-    pub fn add(&mut self, timeline_object: Item) {
-        if self.is_sorted && !self.timeline.is_empty() {
-            self.is_sorted = timeline_object.time() >= self.timeline.last().unwrap().time();
-        }
-        self.timeline.push(timeline_object);
-    }
-
-    #[inline]
-    pub fn len(&self) -> usize {
-        self.timeline.len()
-    }
-
-    #[inline]
-    pub fn is_empty(&self) -> bool {
-        self.timeline.is_empty()
-    }
-
-    #[inline]
-    pub fn reserve(&mut self, additional: usize) {
-        self.timeline.reserve(additional);
-    }
-
-    #[inline]
-    pub fn shrink_to_fit(&mut self) {
-        self.timeline.shrink_to_fit();
-    }
-}
-
-impl<Item> Timeline<Item>
-where
-    Item: TimelineItem,
-{
-    #[inline]
-    pub fn add_sorted(&mut self, timeline_object: Item) {
-        let len = self.timeline.len();
-        
-        if len == 0 || timeline_object.time() >= self.timeline[len - 1].time() {
-            self.timeline.push(timeline_object);
-            return;
-        }
-
-        let pos = self.timeline.binary_search_by(|obj| 
-            obj.time().cmp(&timeline_object.time())
-        ).unwrap_or_else(|pos| pos);
-        
-        self.timeline.insert(pos, timeline_object);
-    }
-
-    #[inline]
-    pub fn sort(&mut self) {
-        if !self.is_sorted {
-            self.timeline.sort_unstable_by(|a, b| a.time().cmp(&b.time()));
-            self.is_sorted = true;
-        }
-    }
-}
-
-impl HitObjectTimeline {
-    pub fn to_hitobjects(&mut self, hitobjects: &mut HitObjects,
-        offset: i32, key_count: usize,
-        bpms_times: &[i32], bpms: &[f32]) {
-        
-        if self.timeline.is_empty() {
-            return;
-        }
-
-        let mut temp_row = vec![Key::empty(); key_count];
-        let mut temp_keysounds: Vec<Option<KeySound>> = vec![None; key_count];
-        
-        let mut current_time = self.timeline[0].time;
-        let mut i = 0;
-        
-        while i < self.timeline.len() {            
-            while i < self.timeline.len() && self.timeline[i].time == current_time {
-                let obj = &self.timeline[i];
-                let column = obj.column;
-                let keysound = obj.keysound;
-                
-                if column < key_count {
-                    match obj.key.key_type {
-                        KeyType::Normal => {
-                            if temp_row[column].key_type != KeyType::SliderStart {
-                                temp_row[column] = Key::normal();
-                            }
-                        },
-                        KeyType::SliderStart => {
-                            temp_row[column] = Key::slider_start(obj.key.slider_end_time());
-                        },
-                        KeyType::SliderEnd => {
-                            if temp_row[column].key_type != KeyType::SliderStart {
-                                temp_row[column] = Key::slider_end();
-                            }
-                        },
-                        _ => {}
-                    }
-                }
-                temp_keysounds[column] = keysound;
-                i += 1;
-            }
-            
-            let row_beat = calculate_beat_from_time(current_time, offset, (bpms_times, bpms));
-            
-            let keysound_row = if temp_keysounds.iter().all(|&keysound| keysound.is_none()) {
-                KeySoundRow::empty()
-            } else {
-                KeySoundRow::with_unwrap(&temp_keysounds)
-            };
-
-            hitobjects.add_hitobject(
-                current_time,
-                row_beat,
-                keysound_row,
-                temp_row.clone(),
-            );
-            
-            if i < self.timeline.len() {
-                current_time = self.timeline[i].time;
-                unsafe {
-                    std::ptr::write_bytes(temp_row.as_mut_ptr(), 0, temp_row.len());
-                    std::ptr::write_bytes(temp_keysounds.as_mut_ptr(), 0, temp_keysounds.len());
-                }
-            }
         }
     }
 }
@@ -218,27 +288,24 @@ impl TimingPointTimeline {
             }
         }
         
-        let len = self.timeline.len();
-        timing_points.times.reserve(len);
-        timing_points.beats.reserve(len);
-        timing_points.changes.reserve(len);
-        
         for timing_point in &self.timeline {
             let time = timing_point.time;
             let beat = calculate_beat_from_time(time, offset, (&bpm_times, &bpms));
             
-            timing_points.times.push(time);
-            timing_points.beats.push(beat);
-            timing_points.changes.push(TimingChange {
-                value: timing_point.value,
-                change_type: timing_point.change_type,
-            });
+            timing_points.add(
+                time,
+                beat,
+                TimingChange {
+                    value: timing_point.value,
+                    change_type: timing_point.change_type,
+                }
+            );
         }
     }
 }
 
-impl<Item> IntoIterator for Timeline<Item> {
-    type Item = Item;
+impl IntoIterator for TimingPointTimeline {
+    type Item = TimelineTimingPoint;
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     #[inline]
@@ -247,9 +314,9 @@ impl<Item> IntoIterator for Timeline<Item> {
     }
 }
 
-impl<'a, Item> IntoIterator for &'a Timeline<Item> {
-    type Item = &'a Item;
-    type IntoIter = std::slice::Iter<'a, Item>;
+impl<'a> IntoIterator for &'a TimingPointTimeline {
+    type Item = &'a TimelineTimingPoint;
+    type IntoIter = std::slice::Iter<'a, TimelineTimingPoint>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -257,9 +324,9 @@ impl<'a, Item> IntoIterator for &'a Timeline<Item> {
     }
 }
 
-impl<'a, Item> IntoIterator for &'a mut Timeline<Item> {
-    type Item = &'a mut Item;
-    type IntoIter = std::slice::IterMut<'a, Item>;
+impl<'a> IntoIterator for &'a mut TimingPointTimeline {
+    type Item = &'a mut TimelineTimingPoint;
+    type IntoIter = std::slice::IterMut<'a, TimelineTimingPoint>;
 
     #[inline]
     fn into_iter(self) -> Self::IntoIter {
@@ -267,8 +334,8 @@ impl<'a, Item> IntoIterator for &'a mut Timeline<Item> {
     }
 }
 
-impl<Item> Index<usize> for Timeline<Item> {
-    type Output = Item;
+impl Index<usize> for TimingPointTimeline {
+    type Output = TimelineTimingPoint;
 
     #[inline]
     fn index(&self, index: usize) -> &Self::Output {
@@ -276,15 +343,15 @@ impl<Item> Index<usize> for Timeline<Item> {
     }
 }
 
-impl<Item> IndexMut<usize> for Timeline<Item> {
+impl IndexMut<usize> for TimingPointTimeline {
     #[inline]
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
         &mut self.timeline[index]
     }
 }
 
-impl<Item> std::ops::Deref for Timeline<Item> {
-    type Target = [Item];
+impl std::ops::Deref for TimingPointTimeline {
+    type Target = [TimelineTimingPoint];
 
     #[inline]
     fn deref(&self) -> &Self::Target {
@@ -292,7 +359,7 @@ impl<Item> std::ops::Deref for Timeline<Item> {
     }
 }
 
-impl<Item> std::ops::DerefMut for Timeline<Item> {
+impl std::ops::DerefMut for TimingPointTimeline {
     #[inline]
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.timeline

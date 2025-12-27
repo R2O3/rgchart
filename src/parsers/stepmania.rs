@@ -1,12 +1,8 @@
 use crate::models;
 use crate::models::common::{
-    ChartDefaults,
-    TimingChangeType,
-    GameMode,
-    Key,
-    KeyType
+    ChartDefaults, GameMode, HitObjectRow, Key, TimingChangeType
 };
-use crate::models::generic::sound::KeySoundRow;
+use crate::models::timeline::{TimelineOps, TimelineTimingPoint};
 use crate::utils::string::{
     remove_comments,
     StrDefaultExtension,
@@ -19,7 +15,6 @@ use crate::utils::time::{
 };
 use crate::utils::rhythm::{
     calculate_time_from_beat,
-    calculate_beat_from_time,
 };
 use crate::errors;
 
@@ -129,85 +124,73 @@ where
     }
 }
 
-fn process_timing_points(bpms_and_stops: &BpmsAndStops, bpms_only: (Vec<f32>, Vec<f32>), start_time: i32)
-    -> models::generic::timing_points::TimingPoints {
-    use models::generic::timing_points::{TimingPoints, TimingChange};
-    let mut timing_points = TimingPoints::with_capacity(64);
-
+fn process_timing_points(
+    bpms_and_stops: &BpmsAndStops, 
+    start_time: i32
+) -> models::generic::timing_points::TimingPoints {
+    use models::generic::timing_points::TimingPoints;
+    use crate::models::timeline::TimingPointTimeline;
+    
+    let mut timeline = TimingPointTimeline::new();
     let (beats, bpms_and_durations, change_types) = bpms_and_stops;
-    let (_bpms_only_beats, bpms_only_values) = bpms_only;
 
-    for i in 0..beats.len() {
-        let current_beat = beats[i];
-        let bpm_or_duration = bpms_and_durations[i];
-
-        let insert_time = calculate_time_from_beat(
-            current_beat,
-            start_time,
-            (beats, bpms_and_durations, change_types)
-        );
-        
-        match change_types[i] {
-            TimingChangeType::Bpm => {
-                timing_points.add(
-                    insert_time,
-                    current_beat,
-                    TimingChange {
+    let stops: Vec<_> = beats.iter()
+        .zip(bpms_and_durations.iter())
+        .zip(change_types.iter())
+        .enumerate()
+        .filter_map(|(_i, ((beat, value), change_type))| {
+            let insert_time = calculate_time_from_beat(
+                *beat,
+                start_time,
+                (beats, bpms_and_durations, change_types)
+            );
+            
+            match change_type {
+                TimingChangeType::Bpm => {
+                    timeline.add(TimelineTimingPoint {
+                        time: insert_time,
+                        value: *value,
                         change_type: TimingChangeType::Bpm,
-                        value: bpm_or_duration,
-                    }
-                );
-            },
-            TimingChangeType::Stop => {
-                // TODO: add stop point as is and we unwrap it inside the writer..
-                timing_points.add(
-                    insert_time,
-                    current_beat,
-                    TimingChange {
-                        change_type: TimingChangeType::Sv,
-                        value: 0.0,
-                    }
-                );
+                    });
+                    None
+                },
+                TimingChangeType::Stop => {
+                    Some((insert_time, *value))
+                },
+                _ => None
+            }
+        })
+        .collect();
 
-                let stop_end_time = insert_time as f32 + bpm_or_duration;
-
-                // TODO: really hacky and ugly way, this is a temp solution, use TimeingPointsTImeline later
-                let bpm_times_vec = timing_points.bpm_changes_zipped()
-                .map(|(t, _, _)| *t)
-                .collect::<Vec<i32>>();
-                let bpm_times: &[i32] = &bpm_times_vec;
-                
-                let stop_end_beat = calculate_beat_from_time(
-                    stop_end_time as i32,
-                    start_time,
-                    (&bpm_times, &bpms_only_values)
-                );
-
-                let stop_time = insert_time + bpm_or_duration as i32;
-
-                timing_points.add(
-                    stop_time,
-                    stop_end_beat,
-                    TimingChange {
-                        change_type: TimingChangeType::Sv,
-                        value: 1.0,
-                    }
-                );
-            },
-            _ => {}
-        }
+    for (stop_time, stop_duration) in stops {
+        timeline.add(TimelineTimingPoint {
+            time: stop_time,
+            value: 0.0,
+            change_type: TimingChangeType::Sv,
+        });
+        
+        let stop_end_time = stop_time + stop_duration as i32;
+        
+        timeline.add(TimelineTimingPoint {
+            time: stop_end_time,
+            value: 1.0,
+            change_type: TimingChangeType::Sv,
+        });
     }
 
+    let mut timing_points = TimingPoints::with_capacity(timeline.len());
+    timeline.to_timing_points(&mut timing_points, start_time);
+    
     timing_points
 }
 
 fn process_notes(raw_note_data: &str, chartinfo: &mut models::generic::chartinfo::ChartInfo, bpms_and_stops: &BpmsAndStops)
     -> models::generic::hitobjects::HitObjects {
     use crate::models::generic::hitobjects::HitObjects;
+    use crate::models::timeline::HitObjectTimeline;
 
     if raw_note_data.contains("No Note Data") { return HitObjects::with_capacity(2048) }
 
-    let mut hitobjects = HitObjects::with_capacity(2048);
     let (beats, bpms_and_durations, change_types) = bpms_and_stops;
     
     let start_time = chartinfo.audio_offset;
@@ -215,22 +198,23 @@ fn process_notes(raw_note_data: &str, chartinfo: &mut models::generic::chartinfo
 
     let difficulty_name = separated_note_data[2];
     chartinfo.difficulty_name = difficulty_name.or_default_empty(ChartDefaults::DIFFICULTY_NAME);
-
+    
     // TODO: make error for stepmania if converting from keys other than 4
-    let _key_count = 4; // TODO: change this later if gonna make this function generic to support Beatmania
+    let key_count = 4; // TODO: change this later if gonna make this function generic to support Beatmania
 
     let raw_notes = separated_note_data.last().unwrap_or(&"Failed to get raw notes in notes section");
     let measures: Vec<&str> = raw_notes.split(",").collect();
 
     let mut measure_beat_count: f32 = 0.0;
+    let mut rows = Vec::new();
 
     for measure in measures {
         let trimmed_measure = measure.trim();
-        let rows: Vec<_> = trimmed_measure.split('\n').collect();
-        let row_count = rows.len();
+        let measure_rows: Vec<_> = trimmed_measure.split('\n').collect();
+        let row_count = measure_rows.len();
         let beat_time_per_row = 4.0 / row_count as f32;
     
-        for (row_index, row) in rows.into_iter().enumerate() {
+        for (row_index, row) in measure_rows.into_iter().enumerate() {
             let row_beat = measure_beat_count + row_index as f32 * beat_time_per_row;
             
             let row_time = calculate_time_from_beat(
@@ -240,23 +224,20 @@ fn process_notes(raw_note_data: &str, chartinfo: &mut models::generic::chartinfo
             );
     
             let keys = parse_keys_in_row(row);
-            for key in &keys {
-                if key.key_type != KeyType::Empty {
-                }
-            }
             
-            hitobjects.add_hitobject(
-                row_time,
-                row_beat,
-                KeySoundRow::empty(),
-                keys
-            );
+            rows.push(HitObjectRow {
+                time: row_time,
+                beat: row_beat,
+                keys,
+            });
         }
     
         measure_beat_count += 4.0;
     }
 
-    hitobjects
+    let flattened = HitObjectTimeline::flatten_rows(&rows, key_count);
+
+    HitObjects::new(flattened)
 }
 
 pub(crate) fn from_sm(raw_chart: &str) -> Result<models::generic::chart::Chart, Box<dyn std::error::Error>>  {
@@ -306,10 +287,9 @@ pub(crate) fn from_sm(raw_chart: &str) -> Result<models::generic::chart::Chart, 
         }
     });
     
-    let bpms_only = bpms.clone();
     let bpms_and_stops = merge_bpm_and_stops(bpms.0, bpms.1, stops.0, stops.1);
 
-    let timing_points = process_timing_points(&bpms_and_stops, bpms_only, chartinfo.audio_offset);
+    let timing_points = process_timing_points(&bpms_and_stops, chartinfo.audio_offset);
 
     let hitobjects = process_notes(&raw_notes, &mut chartinfo, &bpms_and_stops);
 
