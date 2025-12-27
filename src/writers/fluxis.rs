@@ -1,12 +1,6 @@
-use crate::models::fluxis::metadata::{self, Colors};
-use crate::models::generic;
-use crate::models::generic::sound::HitSoundType;
-use crate::models::common::KeyType;
-use crate::models::fluxis::{
-    chart::FscFile,
-    timing_points,
-    hitobjects,
-};
+use crate::models::common::*;
+use crate::models::fluxis::{self, FscFile, Colors};
+use crate::models::generic::{ GenericManiaChart, HitSoundType};
 
 fn get_hitsound_type(hitsound_type: HitSoundType) -> String {
     match hitsound_type {
@@ -17,37 +11,39 @@ fn get_hitsound_type(hitsound_type: HitSoundType) -> String {
     }
 }
 
-pub(crate) fn to_fsc(chart: &generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
-    let metadata = metadata::Metadata {
-      title: chart.metadata.title.clone(),
-      title_rm: Some(chart.metadata.alt_title.clone()),
-      artist: chart.metadata.artist.clone(),
-      artist_rm: Some(chart.metadata.alt_artist.clone()),
-      mapper: chart.metadata.creator.clone(),
-      difficulty: chart.chartinfo.difficulty_name.clone(),
-      source: Some(chart.metadata.source.clone()),
-      tags: chart.metadata.tags.join(" "),
-      previewtime: chart.chartinfo.preview_time as i32,
-      ..metadata::Metadata::default()
+pub(crate) fn to_fsc(
+    chart: &GenericManiaChart,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let metadata = fluxis::Metadata {
+        title: chart.metadata.title.clone(),
+        title_rm: Some(chart.metadata.alt_title.clone()),
+        artist: chart.metadata.artist.clone(),
+        artist_rm: Some(chart.metadata.alt_artist.clone()),
+        mapper: chart.metadata.creator.clone(),
+        difficulty: chart.chartinfo.difficulty_name.clone(),
+        source: Some(chart.metadata.source.clone()),
+        tags: chart.metadata.tags.join(" "),
+        previewtime: chart.chartinfo.preview_time as i32,
+        ..fluxis::Metadata::default()
     };
 
     let timing_points = chart
         .timing_points
         .bpm_changes()
-        .map(|tp| timing_points::TimingPoint {
+        .map(|tp| fluxis::TimingPoint {
             time: tp.time as f32,
             bpm: tp.change.value,
-            ..timing_points::TimingPoint::default()
+            ..fluxis::TimingPoint::default()
         })
         .collect();
 
     let scroll_velocities = chart
         .timing_points
         .sv_changes()
-        .map(|sv| timing_points::ScrollVelocity {
+        .map(|sv| fluxis::ScrollVelocity {
             time: sv.time as f32,
             multiplier: sv.change.value,
-            ..timing_points::ScrollVelocity::default()
+            ..fluxis::ScrollVelocity::default()
         })
         .collect();
 
@@ -59,11 +55,11 @@ pub(crate) fn to_fsc(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
         match hitobject.key.key_type {
             KeyType::Normal => {
-                fsc_hitobjects.push(hitobjects::HitObject {
-                    time: time,
-                    lane: lane,
+                fsc_hitobjects.push(fluxis::HitObject {
+                    time,
+                    lane,
                     hitsound: get_hitsound_type(HitSoundType::Normal),
-                    ..hitobjects::HitObject::default()
+                    ..fluxis::HitObject::default()
                 });
             }
             KeyType::SliderStart => {
@@ -73,12 +69,12 @@ pub(crate) fn to_fsc(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     0
                 };
 
-                fsc_hitobjects.push(hitobjects::HitObject {
-                    time: time,
-                    lane: lane,
-                    holdtime:   ((slider_end_time - hitobject.time) as f32),
+                fsc_hitobjects.push(fluxis::HitObject {
+                    time,
+                    lane,
+                    holdtime: (slider_end_time - hitobject.time) as f32,
                     hitsound: get_hitsound_type(hitobject.keysound.hitsound_type),
-                    ..hitobjects::HitObject::default()
+                    ..fluxis::HitObject::default()
                 });
             }
             _ => continue,

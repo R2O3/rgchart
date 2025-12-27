@@ -1,8 +1,7 @@
 use std::fmt::{self, Display, Formatter};
 use crate::models::{generic::sound::SoundBank, osu::*};
 
-#[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum OsuMode {
     Standard,
     Taiko,

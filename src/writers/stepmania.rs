@@ -1,19 +1,11 @@
-use crate::models;
-use crate::models::common::{
-    ChartDefaults,
-    Key,
-    KeyType,
-    Measure,
-    HitObjectRow
-};
+use crate::models::common::*;
+use crate::models::generic::GenericManiaChart;
 use crate::models::timeline::HitObjectTimeline;
 use crate::utils::math::approx_eq;
+use crate::utils::rhythm::{MeasureRange, snap_to_nearest_note_type_normed};
 use crate::utils::string::add_key_value_template;
 use crate::utils::time::to_seconds;
-use crate::utils::rhythm::{
-    MeasureRange,
-    snap_to_nearest_note_type_normed,
-};
+
 #[allow(unused)]
 use crate::errors;
 
@@ -42,7 +34,8 @@ fn pad_measure(rows: &[HitObjectRow], range: &MeasureRange) -> Measure {
         return vec![HitObjectRow::empty(0, 0.0, key_count); 4];
     }
 
-    let measure: Vec<&HitObjectRow> = rows.iter()
+    let measure: Vec<&HitObjectRow> = rows
+        .iter()
         .skip(range.0)
         .take(range.1 - range.0)
         .collect();
@@ -50,16 +43,17 @@ fn pad_measure(rows: &[HitObjectRow], range: &MeasureRange) -> Measure {
     if measure.is_empty() {
         return vec![HitObjectRow::empty(0, 0.0, key_count); 4];
     }
-    
+
     let measure_start_beat = measure[0].beat;
     let measure_start_time = measure[0].time;
-    let normalized_measure: Vec<_> = measure.iter()
+    let normalized_measure: Vec<_> = measure
+        .iter()
         .map(|row| (row.time, row.beat - measure_start_beat, &row.keys))
         .collect();
 
     let mut minimal_beat_diff = 4.0;
     for i in 1..normalized_measure.len() {
-        let diff = normalized_measure[i].1 - normalized_measure[i-1].1;
+        let diff = normalized_measure[i].1 - normalized_measure[i - 1].1;
         if diff < minimal_beat_diff && diff > 1e-5 {
             minimal_beat_diff = diff;
         }
@@ -67,7 +61,7 @@ fn pad_measure(rows: &[HitObjectRow], range: &MeasureRange) -> Measure {
 
     let snapped_beat_diff = snap_to_nearest_note_type_normed(minimal_beat_diff);
     let row_count = (4.0 / snapped_beat_diff).round() as usize;
-    
+
     let expected_beats: Vec<f32> = (0..row_count)
         .map(|k| k as f32 * snapped_beat_diff)
         .collect();
@@ -88,14 +82,17 @@ fn pad_measure(rows: &[HitObjectRow], range: &MeasureRange) -> Measure {
             }
         }
         let empty_time = measure_start_time + ((expected_beat / 4.0) * 1000.0) as i32;
-        padded_measure.push(HitObjectRow::empty(empty_time, measure_start_beat + expected_beat, key_count));
+        padded_measure.push(HitObjectRow::empty(
+            empty_time,
+            measure_start_beat + expected_beat,
+            key_count,
+        ));
     }
 
     padded_measure
 }
 
-
-pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_sm(chart: &GenericManiaChart) -> Result<String, Box<dyn std::error::Error>> {
     let mut template = String::new();
     let mut bpm_template = String::new();
     let mut notes_template = String::new();
@@ -109,7 +106,9 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
     let beats_per_measure = 4.0;
     let beats_per_measure_scaled = scale_factor * beats_per_measure;
 
-    let key_count = chart.hitobjects.iter()
+    let key_count = chart
+        .hitobjects
+        .iter()
         .map(|obj| obj.lane as usize + 1)
         .max()
         .unwrap_or(4);
@@ -130,13 +129,13 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
 
             if beat - prev_measure_beat > 5.0 {
                 let empty_measure_count = ((beat - prev_beat) / 4.0).floor() as usize;
-                
+
                 for _ in 0..empty_measure_count {
                     measure_indices.push(MeasureRange(current_measure_index, row_index, true));
-                    current_measure_index = row_index; 
+                    current_measure_index = row_index;
                 }
             }
-            
+
             current_measure_index = row_index;
             prev_measure = measure;
             prev_measure_beat = beat;
@@ -153,9 +152,21 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
     let last_bpm_beat = bpms.last().unwrap().beat;
     for bpm in bpms {
         if bpm.beat < last_bpm_beat {
-            add_key_value_template(&mut bpm_template, &bpm.beat.to_string(), "=", &bpm.change.value.to_string(), ",\n");
+            add_key_value_template(
+                &mut bpm_template,
+                &bpm.beat.to_string(),
+                "=",
+                &bpm.change.value.to_string(),
+                ",\n",
+            );
         } else {
-            add_key_value_template(&mut bpm_template, &bpm.beat.to_string(), "=", &bpm.change.value.to_string(), "\n");
+            add_key_value_template(
+                &mut bpm_template,
+                &bpm.beat.to_string(),
+                "=",
+                &bpm.change.value.to_string(),
+                "\n",
+            );
         }
     }
 
@@ -182,69 +193,79 @@ pub(crate) fn to_sm(chart: &models::generic::chart::Chart) -> Result<String, Box
             notes_template.push_str(&sm_row_to_str(&row.keys));
             notes_template.push('\n');
         }
-        if measure_index != last_measure_index { notes_template.push_str(", "); }
+        if measure_index != last_measure_index {
+            notes_template.push_str(", ");
+        }
     }
 
     // process template
-    add_key_value_template(&mut template,
-        "#TITLE", ":", &chart.metadata.title, ";\n");
+    add_key_value_template(&mut template, "#TITLE", ":", &chart.metadata.title, ";\n");
     let subtitle = if chart.metadata.source == ChartDefaults::SOURCE {
         ""
     } else {
         &chart.metadata.source
     };
-    add_key_value_template(&mut template,
-        "#SUBTITLE", ":", subtitle, ";\n");
-    add_key_value_template(&mut template,
-        "#ARTIST",":", &chart.metadata.artist, ";\n");
-    add_key_value_template(&mut template,
-        "#TITLETRANSLIT",":", &chart.metadata.alt_title, ";\n");   
-    add_key_value_template(&mut template,
-        "#SUBTITLETRANSLIT",":", "", ";\n");  
-    add_key_value_template(&mut template,
-        "#ARTISTTRANSLIT",":", &chart.metadata.alt_artist, ";\n");
-    add_key_value_template(&mut template,
-        "#GENRE",":", &chart.metadata.genre, ";\n");
-    add_key_value_template(&mut template,
-        "#CREDIT",":", &chart.metadata.creator, ";\n");
-    add_key_value_template(&mut template,
-        "#BANNER",":", &chart.chartinfo.bg_path, ";\n");
-    add_key_value_template(&mut template,
-        "#BACKGROUND",":", &chart.chartinfo.bg_path, ";\n");
-    add_key_value_template(&mut template,
-        "#LYRICSPATH",":", "", ";\n");
-    add_key_value_template(&mut template,
-        "#CDTITLE",":", "", ";\n");
-    add_key_value_template(&mut template,
-        "#MUSIC",":", &chart.chartinfo.song_path, ";\n");
-    add_key_value_template(&mut template,
-        "#OFFSET",":",  &to_seconds(-chart.chartinfo.audio_offset as f32).to_string(), ";\n");
-    add_key_value_template(&mut template,
-        "#SAMPLESTART",":",  &to_seconds(chart.chartinfo.preview_time as f32).to_string(), ";\n");
-    add_key_value_template(&mut template,
-        "#SAMPLELENGTH",":",  "12.000", ";\n"); // TODO: maybe add chart length in chart info
-    add_key_value_template(&mut template,
-        "#SELECTABLE",":", "YES", ";\n");
-    add_key_value_template(&mut template,
-        "#BPMS",":", &bpm_template, ";\n");
-    add_key_value_template(&mut template,
-        "#STOPS",":", "", ";\n");
-    add_key_value_template(&mut template,
-        "#BGCHANGES",":", "", ";\n");
-    add_key_value_template(&mut template,
-        "#KEYSOUNDS",":", "", ";\n");
-    add_key_value_template(&mut template,
-        "#NOTES", ":", &notes_template, ";\n");
+    add_key_value_template(&mut template, "#SUBTITLE", ":", subtitle, ";\n");
+    add_key_value_template(&mut template, "#ARTIST", ":", &chart.metadata.artist, ";\n");
+    add_key_value_template(
+        &mut template,
+        "#TITLETRANSLIT",
+        ":",
+        &chart.metadata.alt_title,
+        ";\n",
+    );
+    add_key_value_template(&mut template, "#SUBTITLETRANSLIT", ":", "", ";\n");
+    add_key_value_template(
+        &mut template,
+        "#ARTISTTRANSLIT",
+        ":",
+        &chart.metadata.alt_artist,
+        ";\n",
+    );
+    add_key_value_template(&mut template, "#GENRE", ":", &chart.metadata.genre, ";\n");
+    add_key_value_template(&mut template, "#CREDIT", ":", &chart.metadata.creator, ";\n");
+    add_key_value_template(&mut template, "#BANNER", ":", &chart.chartinfo.bg_path, ";\n");
+    add_key_value_template(
+        &mut template,
+        "#BACKGROUND",
+        ":",
+        &chart.chartinfo.bg_path,
+        ";\n",
+    );
+    add_key_value_template(&mut template, "#LYRICSPATH", ":", "", ";\n");
+    add_key_value_template(&mut template, "#CDTITLE", ":", "", ";\n");
+    add_key_value_template(&mut template, "#MUSIC", ":", &chart.chartinfo.song_path, ";\n");
+    add_key_value_template(
+        &mut template,
+        "#OFFSET",
+        ":",
+        &to_seconds(-chart.chartinfo.audio_offset as f32).to_string(),
+        ";\n",
+    );
+    add_key_value_template(
+        &mut template,
+        "#SAMPLESTART",
+        ":",
+        &to_seconds(chart.chartinfo.preview_time as f32).to_string(),
+        ";\n",
+    );
+    add_key_value_template(&mut template, "#SAMPLELENGTH", ":", "12.000", ";\n"); // TODO: maybe add chart length in chart info
+    add_key_value_template(&mut template, "#SELECTABLE", ":", "YES", ";\n");
+    add_key_value_template(&mut template, "#BPMS", ":", &bpm_template, ";\n");
+    add_key_value_template(&mut template, "#STOPS", ":", "", ";\n");
+    add_key_value_template(&mut template, "#BGCHANGES", ":", "", ";\n");
+    add_key_value_template(&mut template, "#KEYSOUNDS", ":", "", ";\n");
+    add_key_value_template(&mut template, "#NOTES", ":", &notes_template, ";\n");
 
     Ok(template)
 }
 
 #[allow(unused)]
-pub(crate) fn to_sma(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_sma(chart: &GenericManiaChart) -> Result<String, Box<dyn std::error::Error>> {
     unimplemented!();
 }
 
 #[allow(unused)]
-pub(crate) fn to_ssc(chart: &models::generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_ssc(chart: &GenericManiaChart) -> Result<String, Box<dyn std::error::Error>> {
     unimplemented!();
 }

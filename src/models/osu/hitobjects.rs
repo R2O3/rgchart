@@ -4,15 +4,7 @@ use std::slice::SliceIndex;
 use crate::models::osu::sound::HitSample;
 use crate::models::common::{self, Key};
 use crate::models::generic::sound::{self, SoundBank};
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum OsuMode {
-    Standard,
-    Taiko,
-    Catch,
-    Mania,
-    Unknown,
-}
+use crate::osu::OsuMode;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct HitObject {

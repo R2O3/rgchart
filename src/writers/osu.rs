@@ -1,9 +1,7 @@
-use crate::models::osu::*;
-use crate::models::generic;
-use crate::models::common::{
-    TimingChangeType, KeyType
-};
-use crate::models::generic::sound::{HitSoundType, SoundBank};
+use crate::models::common::*;
+use crate::models::generic::{GenericManiaChart, HitSoundType, SoundBank};
+use crate::models::osu::{self, *};
+
 #[allow(unused)]
 use crate::errors;
 
@@ -14,7 +12,9 @@ fn bpm_to_beatlength(bpm: &f32) -> f32 {
 
 #[inline(always)]
 fn multiplier_to_beatlength(multiplier: &f32) -> f32 {
-    if *multiplier == 0.0 { return -10000.0 }
+    if *multiplier == 0.0 {
+        return -10000.0;
+    }
     -100.0 / multiplier.abs()
 }
 
@@ -23,15 +23,17 @@ fn column_to_coords(lane: u8, key_count: usize) -> u16 {
     ((lane - 1) as f32 * 512.0 / key_count as f32).ceil() as u16
 }
 
-pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_osu(
+    chart: &GenericManiaChart,
+) -> Result<String, Box<dyn std::error::Error>> {
     let key_count = chart.chartinfo.key_count;
-    
-    let general = general::General {
+
+    let general = osu::General {
         audio_filename: chart.chartinfo.song_path.clone(),
         audio_lead_in: 0,
         preview_time: chart.chartinfo.preview_time,
         countdown: 0,
-        sample_set: sound::SampleSet::Soft,
+        sample_set: osu::SampleSet::Soft,
         stack_leniency: 0.7,
         mode: 3,
         letterbox_in_breaks: false,
@@ -40,7 +42,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         ..Default::default()
     };
 
-    let editor = Some(editor::Editor {
+    let editor = Some(osu::Editor {
         distance_spacing: Some(1.0),
         beat_divisor: Some(4),
         grid_size: Some(4),
@@ -48,7 +50,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         ..Default::default()
     });
 
-    let metadata = metadata::Metadata {
+    let metadata = osu::Metadata {
         title: chart.metadata.title.replace("\n", ""),
         title_unicode: chart.metadata.alt_title.clone(),
         artist: chart.metadata.artist.clone(),
@@ -61,7 +63,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         beatmap_set_id: -1,
     };
 
-    let difficulty = difficulty::Difficulty {
+    let difficulty = osu::Difficulty {
         hp_drain_rate: 8.5,
         circle_size: key_count as f32,
         overall_difficulty: 8.0,
@@ -70,9 +72,9 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         slider_tick_rate: 1.0,
     };
 
-    let mut events = events::Events {
+    let mut events = osu::Events {
         background: if !chart.chartinfo.bg_path.trim().is_empty() {
-            Some(events::Background {
+            Some(osu::Background {
                 filename: chart.chartinfo.bg_path.clone(),
                 x_offset: 0,
                 y_offset: 0,
@@ -81,7 +83,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
             None
         },
         video: if !chart.chartinfo.video_path.trim().is_empty() {
-            Some(events::Video {
+            Some(osu::Video {
                 start_time: 0,
                 filename: chart.chartinfo.video_path.clone(),
                 x_offset: 0,
@@ -95,7 +97,8 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
     if let Some(ref soundbank) = chart.soundbank {
         for sound_effect in &soundbank.sound_effects {
-            let sample_path = soundbank.get_sound_sample(sound_effect.sample)
+            let sample_path = soundbank
+                .get_sound_sample(sound_effect.sample)
                 .unwrap_or_default();
             events.add_sample(
                 sound_effect.time,
@@ -106,12 +109,12 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         }
     }
 
-    let mut timing_points = timing_points::TimingPoints::new();
+    let mut timing_points = osu::TimingPoints::new();
 
     for timing_point in chart.timing_points.iter() {
         match timing_point.change.change_type {
             TimingChangeType::Bpm => {
-                timing_points.add_timing_point(timing_points::TimingPoint {
+                timing_points.add_timing_point(osu::TimingPoint {
                     time: timing_point.time as f32,
                     beat_length: bpm_to_beatlength(&timing_point.change.value),
                     meter: 4,
@@ -121,9 +124,9 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     uninherited: true,
                     effects: 0,
                 });
-            },
+            }
             TimingChangeType::Sv => {
-                timing_points.add_timing_point(timing_points::TimingPoint {
+                timing_points.add_timing_point(osu::TimingPoint {
                     time: timing_point.time as f32,
                     beat_length: multiplier_to_beatlength(&timing_point.change.value),
                     meter: 4,
@@ -133,12 +136,12 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     uninherited: false,
                     effects: 0,
                 });
-            },
+            }
             _ => {}
         }
     }
 
-    let mut hitobjects = hitobjects::HitObjects::new();
+    let mut hitobjects = osu::HitObjects::new();
     let mut soundbank = chart.soundbank.clone().unwrap_or(SoundBank::new());
 
     for hitobject in chart.hitobjects.iter() {
@@ -156,7 +159,8 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         };
 
         let custom_sample = if keysound.has_custom {
-            soundbank.get_sound_sample(keysound.sample.unwrap_or(0))
+            soundbank
+                .get_sound_sample(keysound.sample.unwrap_or(0))
                 .unwrap_or_default()
         } else {
             String::new()
@@ -167,18 +171,18 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         } else {
             keysound.volume
         };
-        
-        let hit_sample = sound::HitSample {
+
+        let hit_sample = osu::HitSample {
             normal_set: 0,
             addition_set: 0,
             index: 0,
             volume,
             filename: custom_sample,
         };
-        
+
         match hitobject.key.key_type {
             KeyType::Normal => {
-                let hit_object = hitobjects::HitObject {
+                let hit_object = osu::HitObject {
                     x: coords as i32,
                     y: 192,
                     time,
@@ -188,7 +192,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     hit_sample,
                 };
                 hitobjects.add_hit_object(hit_object);
-            },
+            }
             KeyType::SliderStart => {
                 let slider_end_time = if let Some(end_time) = hitobject.key.slider_end_time() {
                     end_time
@@ -196,7 +200,7 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     0
                 };
 
-                let hit_object = hitobjects::HitObject {
+                let hit_object = osu::HitObject {
                     x: coords as i32,
                     y: 192,
                     time,
@@ -206,12 +210,12 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     hit_sample,
                 };
                 hitobjects.add_hit_object(hit_object);
-            },
+            }
             _ => continue,
         }
     }
 
-    let osu_file = chart::OsuFile {
+    let osu_file = OsuFile {
         general,
         editor,
         metadata,

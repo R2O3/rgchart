@@ -5,11 +5,13 @@ use crate::models::common::TimingChangeType;
 #[derive(Debug, Clone, Copy)]
 pub struct MeasureRange(pub usize, pub usize, pub bool);
 impl MeasureRange {
+    #[allow(unused)]
     #[inline(always)]
     pub fn start(&self) -> usize {
         self.0
     }
 
+    #[allow(unused)]
     #[inline(always)]
     pub fn end(&self) -> usize {
         self.1
@@ -21,6 +23,7 @@ impl MeasureRange {
     }
 }
 
+#[allow(unused)]
 pub const BEAT_DENOMS: [usize; 9] = [4, 8, 12, 16, 24, 32, 48, 64, 192];
 pub const NOTE_TYPES: [f32; 9] = [
         1.0,    // 4th (4/4)

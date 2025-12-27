@@ -1,5 +1,5 @@
 use std::fmt;
-use crate::wasm_bindgen;
+use crate::{def_varied_type_enum, wasm_bindgen};
 
 def_varied_type_enum!(pub ChartDefaults {
     TITLE: &'static str => "Unknown Title",

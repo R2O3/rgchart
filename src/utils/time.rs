@@ -67,6 +67,8 @@ pub fn merge_bpm_and_stops(
     (beats, values, types)
 }
 
+// pretty old old function but keeping this incase we need it
+#[allow(unused)]
 #[inline(always)]
 pub fn find_sliderend_time(
     start_idx: usize,

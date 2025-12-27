@@ -1,14 +1,7 @@
-use crate::models::generic;
-use crate::models::generic::sound::{KeySound, HitSoundType};
-use crate::models::common::{GameMode, KeyType};
-use crate::models::quaver::{
-    chart::QuaFile,
-    // editor,
-    sound,
-    timing_points,
-    hitobjects,
-};
 use crate::errors;
+use crate::models::common::*;
+use crate::models::generic::{GenericManiaChart, HitSoundType, KeySound};
+use crate::models::quaver::{self, QuaFile};
 
 fn get_mode_string(key_count: u8) -> Result<String, Box<dyn std::error::Error>> {
     match key_count {
@@ -32,9 +25,9 @@ fn get_hitsound_type(hitsound_type: HitSoundType) -> Option<String> {
     }
 }
 
-fn create_keysounds(keysound: KeySound) -> Vec<sound::KeySound> {
+fn create_keysounds(keysound: KeySound) -> Vec<quaver::KeySound> {
     if keysound.has_custom && keysound.sample.is_some() {
-        vec![sound::KeySound {
+        vec![quaver::KeySound {
             sample: keysound.sample.unwrap() + 1,
             volume: keysound.volume,
         }]
@@ -43,7 +36,9 @@ fn create_keysounds(keysound: KeySound) -> Vec<sound::KeySound> {
     }
 }
 
-pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn to_qua(
+    chart: &GenericManiaChart,
+) -> Result<String, Box<dyn std::error::Error>> {
     let key_count = chart.chartinfo.key_count;
     let mode = get_mode_string(key_count)?;
 
@@ -51,7 +46,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         Some(soundbank) => soundbank
             .get_sample_paths()
             .iter()
-            .map(|path| sound::AudioSample {
+            .map(|path| quaver::AudioSample {
                 path: path.clone(),
             })
             .collect(),
@@ -62,7 +57,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
         Some(soundbank) => soundbank
             .sound_effects
             .iter()
-            .map(|effect| sound::SoundEffect {
+            .map(|effect| quaver::SoundEffect {
                 start_time: effect.time as f32,
                 sample: effect.sample + 1,
                 volume: effect.volume,
@@ -74,7 +69,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
     let timing_points = chart
         .timing_points
         .bpm_changes()
-        .map(|tp| timing_points::TimingPoint {
+        .map(|tp| quaver::TimingPoint {
             start_time: tp.time as f32,
             bpm: tp.change.value,
         })
@@ -83,7 +78,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
     let slider_velocities = chart
         .timing_points
         .sv_changes()
-        .map(|sv| timing_points::SliderVelocity {
+        .map(|sv| quaver::SliderVelocity {
             start_time: sv.time as f32,
             multiplier: Some(sv.change.value),
         })
@@ -93,12 +88,12 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
 
     for hitobject in chart.hitobjects.iter() {
         let time = hitobject.time as f32;
-        let lane = hitobject.lane + 1; // Quaver uses 1-indexed lanes
+        let lane = hitobject.lane;
         let keysound = hitobject.keysound;
 
         match hitobject.key.key_type {
             KeyType::Normal => {
-                qua_hitobjects.push(hitobjects::HitObject {
+                qua_hitobjects.push(quaver::HitObject {
                     start_time: time,
                     lane,
                     hit_sound: get_hitsound_type(keysound.hitsound_type),
@@ -113,7 +108,7 @@ pub(crate) fn to_qua(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
                     0.0
                 };
 
-                qua_hitobjects.push(hitobjects::HitObject {
+                qua_hitobjects.push(quaver::HitObject {
                     start_time: time,
                     lane,
                     endtime: Some(slider_end_time),

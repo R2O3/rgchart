@@ -7,7 +7,7 @@ use crate::wasm_bindgen;
 // TODO: maybe don't use getter_with_clone?
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
-pub struct Chart {
+pub struct GenericManiaChart {
     #[wasm_bindgen(getter_with_clone)]
     pub metadata: Metadata,
     #[wasm_bindgen(getter_with_clone)]
@@ -20,7 +20,7 @@ pub struct Chart {
     pub soundbank: Option<SoundBank>,
 }
 
-impl Chart {
+impl GenericManiaChart {
     pub(crate) fn new(
         metadata: Metadata,
         chartinfo: ChartInfo,

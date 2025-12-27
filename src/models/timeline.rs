@@ -1,12 +1,9 @@
-use std::ops::{Index, IndexMut};
 use std::collections::VecDeque;
-use crate::models::generic::hitobjects::HitObject;
-use crate::models::generic::sound::KeySound;
-use crate::models::generic::{
-    timing_points::TimingPoints,
-    timing_points::TimingChange,
-};
-use crate::models::common::{Key, KeyType, HitObjectRow, TimingChangeType};
+use std::ops::{Index, IndexMut};
+use crate::models::common::*;
+use crate::models::generic::HitObject;
+use crate::models::generic::KeySound;
+use crate::models::generic::{TimingPoints, TimingChange};
 use crate::utils::rhythm::calculate_beat_from_time;
 
 #[derive(Debug, Clone, Copy)]
@@ -47,11 +44,13 @@ pub trait TimelineOps<Item> {
         self.timeline().is_empty()
     }
 
+    #[allow(unused)]
     #[inline]
     fn reserve(&mut self, additional: usize) {
         self.timeline_mut().reserve(additional);
     }
 
+    #[allow(unused)]
     #[inline]
     fn shrink_to_fit(&mut self) {
         self.timeline_mut().shrink_to_fit();

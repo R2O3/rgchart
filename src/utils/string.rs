@@ -1,5 +1,6 @@
 use std::str::FromStr;
 
+#[allow(unused)]
 #[inline]
 pub fn parse_key_value(raw_str: &str) -> (&str, &str) {
     let colon_pos = raw_str.find(':').unwrap();
@@ -40,7 +41,7 @@ pub fn add_key_value_template(template: &mut String, key: &str, sep: &str, value
     template.push_str(end);
 }
 
-
+#[allow(unused)]
 #[inline]
 pub fn add_key_value_template_escaped(template: &mut String, key: &str, sep: &str, value: &str, end: &str) {
     let has_esc = value.chars().any(|c| match c {

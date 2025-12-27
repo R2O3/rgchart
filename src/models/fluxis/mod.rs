@@ -1,5 +1,11 @@
-pub mod chart;
+mod chart;
+mod hitobjects;
+mod timing_points;
+mod metadata;
 pub mod sound;
-pub mod hitobjects;
-pub mod timing_points;
-pub mod metadata;
+
+pub use chart::FscFile;
+pub use hitobjects::*;
+pub use timing_points::*;
+pub use metadata::*;
+pub use sound::*;

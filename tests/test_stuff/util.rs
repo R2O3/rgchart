@@ -63,11 +63,11 @@ macro_rules! parse_and_convert {
         use std::time::Instant;
         use std::io::{self, Write};
         use std::path::Path;
-        use self::Chart;
+        use crate::GenericManiaChart;
         
         println_test(stringify!($name), "\x1b[34m", "Started running test");
 
-        let result = (|| -> Result<(Chart, String), Box<dyn std::error::Error>> {
+        let result = (|| -> Result<(GenericManiaChart, String), Box<dyn std::error::Error>> {
             let input_path = $file_path;
             
             let raw_chart = read_file_to_string(input_path).map_err(|e| {
