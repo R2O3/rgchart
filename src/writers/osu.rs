@@ -19,8 +19,8 @@ fn multiplier_to_beatlength(multiplier: &f32) -> f32 {
 }
 
 #[inline(always)]
-fn column_to_coords(column: u8, key_count: usize) -> u16 {
-    (column as f32 * 512.0 / key_count as f32) as u16 + 64
+fn column_to_coords(lane: u8, key_count: usize) -> u16 {
+    ((lane - 1) as f32 * 512.0 / key_count as f32).ceil() as u16
 }
 
 pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn std::error::Error>> {
