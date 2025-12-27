@@ -76,17 +76,19 @@ let qua_string = write::to_qua(&chart);
 let fsc_string = write::To_fsc(&chart);
 ```
 
-#### Chart Structure
-The `Chart` struct contains all the relevant chart information:
+#### Generic Mania Chart Structure
+The `GenericManiaChart` contains all the relevant chart information:
 ```rust
-pub struct Chart {
+pub struct GenericManiaChart {
     pub metadata: Metadata,
     pub chartinfo: ChartInfo,
     pub timing_points: TimingPoints,
-    pub hitobjects: HitObjects
+    pub hitobjects: HitObjects,
+    pub soundbank: Option<SoundBank>,
 }
 ```
-The `Metadata` struct contains all the metadata related information about a specific chart, a lot of all of these can be empty:
+
+The `Metadata` contains all the metadata related information about a specific chart, a lot of all of these can be empty:
 ```rust
 pub struct Metadata {
     pub title: String,
@@ -99,35 +101,90 @@ pub struct Metadata {
     pub source: String,
 }
 ```
-The `ChartInfo` struct contains all the gameplay information about a specific chart:
+
+The `ChartInfo` contains all the gameplay information about a specific chart:
 ```rust
 pub struct ChartInfo {
     pub difficulty_name: String,
+    pub od: f32,
+    pub hp: f32,
     pub bg_path: String,
+    pub video_path: String,
     pub song_path: String,
-    pub audio_offset: f32,
-    pub preview_time: f32,
+    pub audio_offset: i32,
+    pub preview_time: i32,
     pub key_count: u8,
 }
 ```
-The `TimingPoints` struct contains all the timing information such as bpm changes and sv:
+
+The `TimingPoints` contains all the timing information such as bpm changes and sv:
 ```rust
+pub enum TimingChangeType {
+    Bpm,
+    Sv,
+    Stop
+}
+
+pub struct TimingChange {
+    pub change_type: TimingChangeType,
+    pub value: f32,
+}
+
+pub struct TimingPoint {
+    pub time: i32,
+    pub beat: f32,
+    pub change: TimingChange,
+}
+
 pub struct TimingPoints {
-    pub times: Vec<f32>,
-    pub beats: Vec<f32>,
-    pub changes: Vec<TimingChange>,
+    pub points: Vec<TimingPoint>,
 }
 ```
-The `HitObjects` struct contains all the hitobject information.
-hitobject information is stored in rows:
+
+The `HitObjects` struct contains all the hitobject information:
 ```rust
-pub struct HitObjects {
-    pub times: Vec<f32>,
-    pub rows: Vec<Row>,
-    pub beats: Vec<f32>,
-    pub hitsounds: Vec<Vec<u8>>,
+pub struct HitObject {
+    pub time: i32,
+    pub beat: f32,
+    pub keysound: KeySound,
+    pub key: Key,
+    pub lane: u8,
 }
-````
+
+pub struct HitObjects {
+    pub objects: Vec<HitObject>,
+}
+```
+
+Here is how sounds are handled for Mania.
+``SoundBank`` contains all the sounds effects as well as a lookup for samples, it's done this way to be compatible with Quaver.
+```rust
+pub enum HitSoundType {
+    Normal,
+    Clap,
+    Whistle,
+    Finish,
+}
+
+pub struct SoundEffect {
+    pub time: i32,
+    pub volume: u8,
+    pub sample: usize,
+}
+pub struct KeySound {
+    pub volume: u8,
+    pub hitsound_type: HitSoundType,
+    pub sample: Option<usize>,
+    pub has_custom: bool,
+}
+
+pub struct SoundBank {
+    pub audio_tracks: Vec<String>,
+    sound_sample_paths: Vec<String>,
+    pub sound_effects: Vec<SoundEffect>,
+    sample_map: HashMap<String, usize>,
+}
+```
 
 ## JavaScript/TypeScript Usage
 
