@@ -71,17 +71,25 @@ pub(crate) fn to_osu(chart: &generic::chart::Chart) -> Result<String, Box<dyn st
     };
 
     let mut events = events::Events {
-        background: Some(events::Background {
-            filename: chart.chartinfo.bg_path.clone(),
-            x_offset: 0,
-            y_offset: 0,
-        }),
-        video: Some(events::Video {
-            start_time: 0,
-            filename: chart.chartinfo.video_path.clone(),
-            x_offset: 0,
-            y_offset: 0,
-        }),
+        background: if !chart.chartinfo.bg_path.trim().is_empty() {
+            Some(events::Background {
+                filename: chart.chartinfo.bg_path.clone(),
+                x_offset: 0,
+                y_offset: 0,
+            })
+        } else {
+            None
+        },
+        video: if !chart.chartinfo.video_path.trim().is_empty() {
+            Some(events::Video {
+                start_time: 0,
+                filename: chart.chartinfo.video_path.clone(),
+                x_offset: 0,
+                y_offset: 0,
+            })
+        } else {
+            None
+        },
         ..Default::default()
     };
 
