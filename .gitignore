@@ -9,5 +9,8 @@ rgc-chart-web.tgz
 # testing
 /test_export
 
+# private
+.npmrc
+
 # I don't think we really need this for this library
 Cargo.lock
