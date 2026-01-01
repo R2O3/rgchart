@@ -39,7 +39,7 @@ cargo add rgc-chart
 
 #### Parsing Charts
 ```rust
-use rgc_chart::parse;
+use rgchart::parse;
 
 // Parse an osu! chart from string to a generic mania chart
 let osu_chart = parse::from_osu_generic(raw_osu_string).expect("Failed to parse osu! chart");
@@ -56,9 +56,9 @@ let fsc_chart = parse::from_fsc_generic(raw_qua_string).expect("Failed to parse 
 
 to parse charts in their original structures:
 ```rust
-use rgc_chart::FscFile;
-use rgc_chart::OsuFile;
-use rgc_chart::QuaFile;
+use rgchart::FscFile;
+use rgchart::OsuFile;
+use rgchart::QuaFile;
 
 // Parse an osu! chart from string
 let osu_chart = OsuFile::from_str(raw_osu_string).expect("Failed to parse osu! chart");
@@ -72,9 +72,9 @@ let fsc_chart = FscFile::from_str(raw_fsc_string).expect("Failed to parse fluXis
 
 #### Writing Charts
 ```rust
-use rgc_chart::parse;
-use rgc_chart::write;
-use rgc_chart::GenericManiaChart;
+use rgchart::parse;
+use rgchart::write;
+use rgchart::GenericManiaChart;
 
 let chart: GenericManiaChart = parse::from_osu_generic(raw_osu_string).expect("Failed to parse osu! chart");
 
@@ -93,9 +93,9 @@ let fsc_string = write::To_fsc_generic(&chart);
 
 to write charts from their original structures:
 ```rust
-use rgc_chart::FscFile;
-use rgc_chart::OsuFile;
-use rgc_chart::QuaFile;
+use rgchart::FscFile;
+use rgchart::OsuFile;
+use rgchart::QuaFile;
 
 // Write from OsuFile to to osu! format
 let osu_string = osu_chart.to_osu_format_mania(soundbank);
@@ -240,7 +240,7 @@ npm install rgc-chart-nodejs
 
 For web projects:
 ```html
-<script src="https://unpkg.com/rgc-chart-browser@latest/rgc_chart.js"></script>
+<script src="https://unpkg.com/rgc-chart-browser@latest/rgchart.js"></script>
 ```
 or
 ```javascript
@@ -253,10 +253,10 @@ then use as an ES module
 #### Initialization
 ```javascript
 // For ES modules
-import * as rgcChart from 'rgc-chart'; // or if not on node use the path to rgc_chart.js
+import * as rgcChart from 'rgc-chart'; // or if not on node use the path to rgchart.js
 
 // or alternatively
-const rgcChart = await import('path/to/rgc_chart.js')
+const rgcChart = await import('path/to/rgchart.js')
 
 // For CommonJS
 const rgcChart = require('rgc-chart');

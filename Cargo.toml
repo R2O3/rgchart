@@ -1,7 +1,7 @@
 [package]
-name = "rgc-chart"
-repository = "https://github.com/menvae/RGC-Chart"
-authors = ["menvae"]
+name = "rgchart"
+repository = "https://github.com/R2O3/rgchart"
+authors = ["menvae <menvaedev@gmail.com>"]
 categories = ["parser-implementations", "encoding", "wasm"]
 description = "A library for parsing and writing rhythm game charts."
 keywords = [

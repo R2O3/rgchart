@@ -32,7 +32,7 @@ document.getElementById('testJs').addEventListener('click', () => runJsTests());
 
 async function initWasm() {
     try {
-        const wasm = await import('./bin/rgc_chart.js');
+        const wasm = await import('./bin/rgchart.js');
         wasm.default();
         window.wasm = await wasm;
         console.log("Wasm initialized successfully!");
