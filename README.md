@@ -1,4 +1,4 @@
-# RGC Chart
+# rgchart
 A library for parsing and writing charts for various rhythm games. It supports cross-platform usage including Web and Node.js environments via WebAssembly (WASM).
 
 ## Table of Contents
@@ -27,12 +27,12 @@ A library for parsing and writing charts for various rhythm games. It supports c
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-rgc-chart = "0.0.10"
+rgchart = "0.0.11"
 ```
 
 Or run:
 ```sh
-cargo add rgc-chart
+cargo add rgchart
 ```
 
 ### API Reference
@@ -235,16 +235,16 @@ pub struct SoundBank {
 ### Installation
 For Node.js:
 ```sh
-npm install rgc-chart-nodejs
+npm install @r2o3/rgchart-nodejs
 ```
 
 For web projects:
 ```html
-<script src="https://unpkg.com/rgc-chart-browser@latest/rgchart.js"></script>
+<script src="https://unpkg.com/@r2o3/rgchart-browser@latest/rgchart.js"></script>
 ```
 or
 ```javascript
-npm install rgc-chart-browser
+npm install @r2o3/rgchart-browser
 ```
 then use as an ES module
 
@@ -253,47 +253,47 @@ then use as an ES module
 #### Initialization
 ```javascript
 // For ES modules
-import * as rgcChart from 'rgc-chart'; // or if not on node use the path to rgchart.js
+import * as rgchart from '@r2o3/rgchart'; // or if not on node use the path to rgchart.js
 
 // or alternatively
-const rgcChart = await import('path/to/rgchart.js')
+const rgchart = await import('path/to/rgchart.js')
 
 // For CommonJS
-const rgcChart = require('rgc-chart');
+const rgchart = require('rgchart');
 ```
 
-you may need to do ``await rgcChart.default()`` after importing if you've imported it in a script tag (with type="module") or you get an error like ``Uncaught TypeError: Cannot read properties of undefined (reading '__wbindgen_malloc')``
+you may need to do ``await rgchart.default()`` after importing if you've imported it in a script tag (with type="module") or you get an error like ``Uncaught TypeError: Cannot read properties of undefined (reading '__wbindgen_malloc')``
 
 As of now you can't parse/write using the original structures in JS/TS, will be supported in the *near* future.
 
 #### Parsing Charts
 ```javascript
 // Parse an osu! chart from string to a generic mania chart
-const OsuChart = rgcChart.parseFromOsuGeneric(rawOsuString);
+const OsuChart = rgchart.parseFromOsuGeneric(rawOsuString);
 
 // Parse a Stepmania chart from string to a generic mania chart
-const SmChart = rgcChart.parseFromSmGeneric(rawSmString);
+const SmChart = rgchart.parseFromSmGeneric(rawSmString);
 
 // Parse a Quaver chart from string to a generic mania chart
-const QuaChart = rgcChart.parseFromQuaGeneric(rawQuaString);
+const QuaChart = rgchart.parseFromQuaGeneric(rawQuaString);
 
 // Parse a fluXis chart from string to a generic mania chart
-const FscChart = rgcChart.parseFromFscGeneric(rawFscString);
+const FscChart = rgchart.parseFromFscGeneric(rawFscString);
 ```
 
 #### Writing Charts
 ```javascript
 // write from generic mania chart to osu! format
-const osuString = rgcChart.writeToOsuGeneric(chart);
+const osuString = rgchart.writeToOsuGeneric(chart);
 
 // write from generic mania chart to Stepmania format
-const smString = rgcChart.writeToSmGeneric(chart);
+const smString = rgchart.writeToSmGeneric(chart);
 
 // write from generic mania chart to Quaver format
-const quaString = rgcChart.writeToQuaGeneric(chart);
+const quaString = rgchart.writeToQuaGeneric(chart);
 
 // write from generic mania chart to fluXis format
-const fscString = rgcChart.writeToFscGeneric(chart);
+const fscString = rgchart.writeToFscGeneric(chart);
 ```
 
 #### TypeScript Types
@@ -325,4 +325,4 @@ npm run build-release # release build
 
 ## License
 RGC uses the MIT License for all its sibiling projects.
-See [LICENSE](https://github.com/menvae/RGC-Chart/blob/master/LICENSE) for more information
+See [LICENSE](https://github.com/menvae/rgchart/blob/master/LICENSE) for more information

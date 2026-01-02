@@ -1,12 +1,12 @@
 {
-  "name": "rgc-chart",
+  "name": "@r2o3/rgchart",
   "version": "0.0.11",
   "description": "A library for parsing and writing rhythm game charts.",
   "license": "MIT",
   "author": "menvae",
   "repository": {
     "type": "git",
-    "url": "https://github.com/menvae/RGC-Chart"
+    "url": "https://github.com/R2O3/rgchart"
   },
   "scripts": {
     "build": "wasm-pack build --target nodejs --out-dir dist-node && wasm-pack build --target web --out-dir dist-web",
@@ -14,8 +14,8 @@
     
     "fix-pkg": "node scripts/fix-pkg.js",
     
-    "pack-node": "cd dist-node && npm pack && mv rgc-chart-*.tgz ../rgc-chart-node.tgz",
-    "pack-web": "cd dist-web && npm pack && mv rgc-chart-*.tgz ../rgc-chart-web.tgz",
+    "pack-node": "cd dist-node && npm pack && mv rgchart-*.tgz ../rgchart-node.tgz",
+    "pack-web": "cd dist-web && npm pack && mv rgchart-*.tgz ../rgchart-web.tgz",
     "pack": "npm run build-release && npm run pack-node && npm run pack-web",
     
     "publish-node": "cd dist-node && npm publish --access public",

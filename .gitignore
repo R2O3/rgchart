@@ -3,8 +3,8 @@
 
 # wasm builds
 /pkg
-rgc-chart-node.tgz
-rgc-chart-web.tgz
+rgchart-node.tgz
+rgchart-web.tgz
 
 # testing
 /test_export
