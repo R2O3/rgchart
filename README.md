@@ -27,7 +27,7 @@ A library for parsing and writing charts for various rhythm games. It supports c
 Add this to your `Cargo.toml`:
 ```toml
 [dependencies]
-rgchart = "0.0.11"
+rgchart = "0.0.12"
 ```
 
 Or run:
