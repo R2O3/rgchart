@@ -13,6 +13,7 @@ use crate::models::generic::{
 };
 use crate::models::quaver::{self, QuaFile};
 use crate::models::timeline::{TimelineOps, TimelineTimingPoint, TimingPointTimeline};
+use crate::utils::quaver::get_keycount_from_str;
 use crate::utils::rhythm::calculate_beat_from_time;
 
 fn process_timing_points(
@@ -141,15 +142,10 @@ pub(crate) fn from_qua_generic(
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
     let quaver_file = QuaFile::from_str(&raw_chart)?;
 
-    let key_count = match quaver_file.mode.as_str() {
-        "Keys4" => 4,
-        "Keys7" => 7,
-        _ => {
-            return Err(Box::new(errors::ParseError::<GameMode>::InvalidChart(
-                "Quaver only supports Keys4 and Keys7 for Mode".to_string(),
-            )))
-        }
-    };
+    let key_count = get_keycount_from_str(quaver_file.mode.as_str())
+    .ok_or_else(|| Box::new(errors::ParseError::<GameMode>::InvalidChart(
+        "Quaver only supports Keys1 up to Keys10 for Mode".to_string(),
+    )))?;
 
     let metadata = Metadata {
         title: quaver_file.title,

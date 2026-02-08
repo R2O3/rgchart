@@ -233,7 +233,7 @@ impl Event {
         self.event_type == "Sample"
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut parts = vec![self.event_type.clone(), self.start_time.to_string()];
         parts.extend(self.event_params.iter().cloned());
         parts.join(",")
@@ -249,7 +249,7 @@ impl Background {
         }
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         if self.x_offset == 0 && self.y_offset == 0 {
             format!("0,0,\"{}\"", self.filename)
         } else {
@@ -268,7 +268,7 @@ impl Video {
         }
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         if self.x_offset == 0 && self.y_offset == 0 {
             format!("Video,{},\"{}\"", self.start_time, self.filename)
         } else {
@@ -289,7 +289,7 @@ impl Break {
         self.end_time - self.start_time
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         format!("2,{},{}", self.start_time, self.end_time)
     }
 }
@@ -314,7 +314,7 @@ impl Sample {
         }
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         if self.volume == 100 {
             format!("Sample,{},{},\"{}\"", self.start_time, self.layer, self.filename)
         } else {
@@ -368,55 +368,55 @@ impl Events {
         self.samples.iter().filter(|s| s.layer == layer).collect()
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut result = String::new();
         
         result.push_str("//Background and Video events\n");
         
         if let Some(ref bg) = self.background {
-            result.push_str(&bg.to_osu_format());
+            result.push_str(&bg.to_str());
             result.push('\n');
         }
         
         if let Some(ref video) = self.video {
-            result.push_str(&video.to_osu_format());
+            result.push_str(&video.to_str());
             result.push('\n');
         }
         
         result.push_str("//Break Periods\n");
         for break_event in &self.breaks {
-            result.push_str(&break_event.to_osu_format());
+            result.push_str(&break_event.to_str());
             result.push('\n');
         }
         
         result.push_str("//Storyboard Layer 0 (Background)\n");
         for sample in self.samples_by_layer(0) {
-            result.push_str(&sample.to_osu_format());
+            result.push_str(&sample.to_str());
             result.push('\n');
         }
         
         result.push_str("//Storyboard Layer 1 (Fail)\n");
         for sample in self.samples_by_layer(1) {
-            result.push_str(&sample.to_osu_format());
+            result.push_str(&sample.to_str());
             result.push('\n');
         }
         
         result.push_str("//Storyboard Layer 2 (Pass)\n");
         for sample in self.samples_by_layer(2) {
-            result.push_str(&sample.to_osu_format());
+            result.push_str(&sample.to_str());
             result.push('\n');
         }
         
         result.push_str("//Storyboard Layer 3 (Foreground)\n");
         for sample in self.samples_by_layer(3) {
-            result.push_str(&sample.to_osu_format());
+            result.push_str(&sample.to_str());
             result.push('\n');
         }
         
         result.push_str("//Storyboard Layer 4 (Overlay)\n");
         for sample in &self.samples {
             if sample.layer >= 4 {
-                result.push_str(&sample.to_osu_format());
+                result.push_str(&sample.to_str());
                 result.push('\n');
             }
         }

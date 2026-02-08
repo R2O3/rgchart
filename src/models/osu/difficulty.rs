@@ -162,7 +162,7 @@ impl Difficulty {
         200.0 - 10.0 * self.overall_difficulty
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         format!(
             "HPDrainRate: {}\nCircleSize: {}\nOverallDifficulty: {}\nApproachRate: {}\nSliderMultiplier: {}\nSliderTickRate: {}",
             self.hp_drain_rate,

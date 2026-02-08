@@ -54,186 +54,186 @@ impl OsuFile {
 }
 
 impl OsuFile {
-    pub fn to_osu_format_taiko(&self) -> String {
+    pub fn to_str_taiko(&self) -> String {
         let mut result = String::new();
         result.push_str("osu file format v14\n\n");
         
         result.push_str("[General]\n");
-        result.push_str(&self.general.to_osu_format());
+        result.push_str(&self.general.to_str());
         result.push_str("\n\n");
         
         if let Some(ref editor) = self.editor {
             result.push_str("[Editor]\n");
-            result.push_str(&editor.to_osu_format());
+            result.push_str(&editor.to_str());
             result.push_str("\n\n");
         }
         
         result.push_str("[Metadata]\n");
-        result.push_str(&self.metadata.to_osu_format());
+        result.push_str(&self.metadata.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Difficulty]\n");
-        result.push_str(&self.difficulty.to_osu_format());
+        result.push_str(&self.difficulty.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Events]\n");
-        result.push_str(&self.events.to_osu_format());
+        result.push_str(&self.events.to_str());
         result.push_str("\n");
         
         result.push_str("[TimingPoints]\n");
-        result.push_str(&self.timing_points.to_osu_format());
+        result.push_str(&self.timing_points.to_str());
         result.push_str("\n\n");
         
         result.push_str("[HitObjects]\n");
-        result.push_str(&self.hitobjects.to_osu_format_taiko());
+        result.push_str(&self.hitobjects.to_str_taiko());
         
         result
     }
 
-    pub fn to_osu_format_catch(&self) -> String {
+    pub fn to_str_catch(&self) -> String {
         let mut result = String::new();
         result.push_str("osu file format v14\n\n");
         
         result.push_str("[General]\n");
-        result.push_str(&self.general.to_osu_format());
+        result.push_str(&self.general.to_str());
         result.push_str("\n\n");
         
         if let Some(ref editor) = self.editor {
             result.push_str("[Editor]\n");
-            result.push_str(&editor.to_osu_format());
+            result.push_str(&editor.to_str());
             result.push_str("\n\n");
         }
         
         result.push_str("[Metadata]\n");
-        result.push_str(&self.metadata.to_osu_format());
+        result.push_str(&self.metadata.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Difficulty]\n");
-        result.push_str(&self.difficulty.to_osu_format());
+        result.push_str(&self.difficulty.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Events]\n");
-        result.push_str(&self.events.to_osu_format());
+        result.push_str(&self.events.to_str());
         result.push_str("\n");
         
         result.push_str("[TimingPoints]\n");
-        result.push_str(&self.timing_points.to_osu_format());
+        result.push_str(&self.timing_points.to_str());
         result.push_str("\n\n");
         
         result.push_str("[HitObjects]\n");
-        result.push_str(&self.hitobjects.to_osu_format_catch());
+        result.push_str(&self.hitobjects.to_str_catch());
         
         result
     }
 
-    pub fn to_osu_format_mania(&self, soundbank: &mut SoundBank) -> String {
+    pub fn to_str_mania(&self, soundbank: &mut SoundBank) -> String {
         let mut result = String::new();
         result.push_str("osu file format v14\n\n");
         
         result.push_str("[General]\n");
-        result.push_str(&self.general.to_osu_format());
+        result.push_str(&self.general.to_str());
         result.push_str("\n\n");
         
         if let Some(ref editor) = self.editor {
             result.push_str("[Editor]\n");
-            result.push_str(&editor.to_osu_format());
+            result.push_str(&editor.to_str());
             result.push_str("\n\n");
         }
         
         result.push_str("[Metadata]\n");
-        result.push_str(&self.metadata.to_osu_format());
+        result.push_str(&self.metadata.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Difficulty]\n");
-        result.push_str(&self.difficulty.to_osu_format());
+        result.push_str(&self.difficulty.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Events]\n");
-        result.push_str(&self.events.to_osu_format());
+        result.push_str(&self.events.to_str());
         result.push_str("\n");
         
         result.push_str("[TimingPoints]\n");
-        result.push_str(&self.timing_points.to_osu_format());
+        result.push_str(&self.timing_points.to_str());
         result.push_str("\n\n");
         
         result.push_str("[HitObjects]\n");
-        result.push_str(&self.hitobjects.to_osu_format_mania(soundbank));
+        result.push_str(&self.hitobjects.to_str_mania(soundbank));
         
         result
     }
 
-    pub fn to_osu_format_mania_no_soundbank(&self) -> String {
+    pub fn to_str_mania_no_soundbank(&self) -> String {
         let mut result = String::new();
         result.push_str("osu file format v14\n\n");
         
         result.push_str("[General]\n");
-        result.push_str(&self.general.to_osu_format());
+        result.push_str(&self.general.to_str());
         result.push_str("\n\n");
         
         if let Some(ref editor) = self.editor {
             result.push_str("[Editor]\n");
-            result.push_str(&editor.to_osu_format());
+            result.push_str(&editor.to_str());
             result.push_str("\n\n");
         }
         
         result.push_str("[Metadata]\n");
-        result.push_str(&self.metadata.to_osu_format());
+        result.push_str(&self.metadata.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Difficulty]\n");
-        result.push_str(&self.difficulty.to_osu_format());
+        result.push_str(&self.difficulty.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Events]\n");
-        result.push_str(&self.events.to_osu_format());
+        result.push_str(&self.events.to_str());
         result.push_str("\n");
         
         result.push_str("[TimingPoints]\n");
-        result.push_str(&self.timing_points.to_osu_format());
+        result.push_str(&self.timing_points.to_str());
         result.push_str("\n\n");
         
         result.push_str("[HitObjects]\n");
-        result.push_str(&self.hitobjects.to_osu_format_mania_no_soundbank());
+        result.push_str(&self.hitobjects.to_str_no_soundbank());
         
         result
     }
 
-    pub fn to_osu_format_standard(&self) -> String {
-        self.to_osu_format()
+    pub fn to_str_standard(&self) -> String {
+        self.to_str()
     }
 
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut result = String::new();
         result.push_str("osu file format v14\n\n");
         
         result.push_str("[General]\n");
-        result.push_str(&self.general.to_osu_format());
+        result.push_str(&self.general.to_str());
         result.push_str("\n\n");
         
         if let Some(ref editor) = self.editor {
             result.push_str("[Editor]\n");
-            result.push_str(&editor.to_osu_format());
+            result.push_str(&editor.to_str());
             result.push_str("\n\n");
         }
         
         result.push_str("[Metadata]\n");
-        result.push_str(&self.metadata.to_osu_format());
+        result.push_str(&self.metadata.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Difficulty]\n");
-        result.push_str(&self.difficulty.to_osu_format());
+        result.push_str(&self.difficulty.to_str());
         result.push_str("\n\n");
         
         result.push_str("[Events]\n");
-        result.push_str(&self.events.to_osu_format());
+        result.push_str(&self.events.to_str());
         result.push_str("\n");
         
         result.push_str("[TimingPoints]\n");
-        result.push_str(&self.timing_points.to_osu_format());
+        result.push_str(&self.timing_points.to_str());
         result.push_str("\n\n");
         
         result.push_str("[HitObjects]\n");
-        result.push_str(&self.hitobjects.to_osu_format());
+        result.push_str(&self.hitobjects.to_str());
         
         result
     }

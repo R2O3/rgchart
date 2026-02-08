@@ -98,18 +98,18 @@ use rgchart::OsuFile;
 use rgchart::QuaFile;
 
 // Write from OsuFile to to osu! format
-let osu_string = osu_chart.to_osu_format_mania(soundbank);
+let osu_string = osu_chart.to_str_mania(soundbank);
 
 // assuming you don't have a soundbank
-let osu_string = osu_chart.to_osu_format_mania_no_soundbank();
+let osu_string = osu_chart.to_str_mania_no_soundbank();
 
 // other modes for osu!, it will interprete the hit objects values as is for the mode you're writing to.
-let osu_string = osu_chart.to_osu_format();
+let osu_string = osu_chart.to_str();
 // or
-let osu_string = osu_chart.to_osu_format_standard(soundbank);
+let osu_string = osu_chart.to_str_standard(soundbank);
 
-let osu_string = osu_chart.to_osu_format_taiko(soundbank);
-let osu_string = osu_chart.to_osu_format_catch(soundbank);
+let osu_string = osu_chart.to_str_taiko(soundbank);
+let osu_string = osu_chart.to_str_catch(soundbank);
 
 // Write from QuaFile to Quaver format
 let qua_string = qua_chart.to_str().expect("Failed to write Quaver chart");

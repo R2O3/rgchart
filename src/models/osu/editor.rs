@@ -75,7 +75,7 @@ impl FromStr for Editor {
 }
 
 impl Editor {
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut lines = Vec::new();
         
         if !self.bookmarks.is_empty() {

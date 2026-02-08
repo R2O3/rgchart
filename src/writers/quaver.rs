@@ -1,20 +1,7 @@
-use crate::errors;
 use crate::models::common::*;
 use crate::models::generic::{GenericManiaChart, HitSoundType, KeySound};
 use crate::models::quaver::{self, QuaFile};
-
-fn get_mode_string(key_count: u8) -> Result<String, Box<dyn std::error::Error>> {
-    match key_count {
-        4 | 7 => Ok(format!("Keys{}", key_count)),
-        5 => Ok("Keys4".to_string()),
-        8 => Ok("Keys7".to_string()),
-        _ => Err(Box::new(errors::WriteError::<GameMode>::InvalidKeyCount(
-            key_count,
-            "Quaver".to_string(),
-            "4k, 4k+1, 7k and 7k+1".to_string(),
-        ))),
-    }
-}
+use crate::utils::quaver::get_mode_from_u8;
 
 fn get_hitsound_type(hitsound_type: HitSoundType) -> Option<String> {
     match hitsound_type {
@@ -40,7 +27,7 @@ pub(crate) fn to_qua_generic(
     chart: &GenericManiaChart,
 ) -> Result<String, Box<dyn std::error::Error>> {
     let key_count = chart.chartinfo.key_count;
-    let mode = get_mode_string(key_count)?;
+    let mode = get_mode_from_u8(key_count);
 
     let custom_audio_samples = match &chart.soundbank {
         Some(soundbank) => soundbank

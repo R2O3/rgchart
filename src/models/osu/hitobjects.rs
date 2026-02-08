@@ -295,7 +295,7 @@ impl HitObject {
         }
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut parts = vec![
             self.x.to_string(),
             self.y.to_string(),
@@ -306,7 +306,7 @@ impl HitObject {
         
         parts.extend(self.object_params.iter().cloned());
         
-        let hit_sample_str = self.hit_sample.to_osu_format();
+        let hit_sample_str = self.hit_sample.to_str();
         parts.push(hit_sample_str);
         
         parts.join(",")
@@ -314,23 +314,23 @@ impl HitObject {
 }
 
 impl HitObject {
-    pub fn to_osu_format_with_mode(&self, mode: &OsuMode, soundbank: Option<&mut SoundBank>) -> String {
+    pub fn to_str_with_mode(&self, mode: &OsuMode, soundbank: Option<&mut SoundBank>) -> String {
         match mode {
-            OsuMode::Standard => self.to_osu_format_standard(),
-            OsuMode::Taiko => self.to_osu_format_taiko(),
-            OsuMode::Catch => self.to_osu_format_catch(),
+            OsuMode::Standard => self.to_str_standard(),
+            OsuMode::Taiko => self.to_str_taiko(),
+            OsuMode::Catch => self.to_str_catch(),
             OsuMode::Mania => {
                 if let Some(sb) = soundbank {
-                    self.to_osu_format_mania(sb)
+                    self.to_str_mania(sb)
                 } else {
-                    self.to_osu_format_mania_no_soundbank()
+                    self.to_str_mania_no_soundbank()
                 }
             },
-            OsuMode::Unknown => self.to_osu_format(),
+            OsuMode::Unknown => self.to_str(),
         }
     }
 
-    fn to_osu_format_standard(&self) -> String {
+    fn to_str_standard(&self) -> String {
         let mut parts = vec![
             self.x.to_string(),
             self.y.to_string(),
@@ -347,13 +347,13 @@ impl HitObject {
             }
         }
         
-        let hit_sample_str = self.hit_sample.to_osu_format();
+        let hit_sample_str = self.hit_sample.to_str();
         parts.push(hit_sample_str);
         
         parts.join(",")
     }
 
-    fn to_osu_format_taiko(&self) -> String {
+    fn to_str_taiko(&self) -> String {
         let taiko_obj = self.to_taiko();
         let mut parts = vec![
             "256".to_string(),
@@ -401,13 +401,13 @@ impl HitObject {
             }
         }
 
-        let hit_sample_str = self.hit_sample.to_osu_format();
+        let hit_sample_str = self.hit_sample.to_str();
         parts.push(hit_sample_str);
 
         return parts.join(",");
     }
 
-    fn to_osu_format_catch(&self) -> String {
+    fn to_str_catch(&self) -> String {
         let catch_obj = self.to_catch();
         let mut parts = vec![
             self.x.to_string(),
@@ -437,13 +437,13 @@ impl HitObject {
             },
         }
 
-        let hit_sample_str = self.hit_sample.to_osu_format();
+        let hit_sample_str = self.hit_sample.to_str();
         parts.push(hit_sample_str);
 
         parts.join(",")
     }
 
-    fn to_osu_format_mania(&self, soundbank: &mut SoundBank) -> String {
+    fn to_str_mania(&self, soundbank: &mut SoundBank) -> String {
         let keysound = self.get_generic_keysound(soundbank);
         let mut parts = vec![
             self.x.to_string(),
@@ -471,18 +471,18 @@ impl HitObject {
 
         if self.is_hold() {
             if let Some(end_time) = self.end_time() {
-                let hit_sample_str = hit_sample.to_osu_format();
+                let hit_sample_str = hit_sample.to_str();
                 parts.push(format!("{}:{}", end_time, hit_sample_str));
             }
         } else {
-            let hit_sample_str = hit_sample.to_osu_format();
+            let hit_sample_str = hit_sample.to_str();
             parts.push(hit_sample_str);
         }
 
         parts.join(",")
     }
 
-    fn to_osu_format_mania_no_soundbank(&self) -> String {
+    fn to_str_mania_no_soundbank(&self) -> String {
         let mut parts = vec![
             self.x.to_string(),
             "192".to_string(),
@@ -493,11 +493,11 @@ impl HitObject {
 
         if self.is_hold() {
             if let Some(end_time) = self.end_time() {
-                let hit_sample_str = self.hit_sample.to_osu_format();
+                let hit_sample_str = self.hit_sample.to_str();
                 parts.push(format!("{}:{}", end_time, hit_sample_str));
             }
         } else {
-            let hit_sample_str = self.hit_sample.to_osu_format();
+            let hit_sample_str = self.hit_sample.to_str();
             parts.push(hit_sample_str);
         }
 
@@ -603,50 +603,50 @@ impl HitObjects {
         });
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         self.hit_objects
             .iter()
-            .map(|obj| obj.to_osu_format() )
+            .map(|obj| obj.to_str() )
             .collect::<Vec<_>>()
             .join("\n")
     }
 }
 
 impl HitObjects {
-    pub fn to_osu_format_taiko(&self) -> String {
+    pub fn to_str_taiko(&self) -> String {
         self.hit_objects
             .iter()
-            .map(|obj| obj.to_osu_format_taiko() )
+            .map(|obj| obj.to_str_taiko() )
             .collect::<Vec<_>>()
             .join("\n")
     }
 
-    pub fn to_osu_format_catch(&self) -> String {
+    pub fn to_str_catch(&self) -> String {
         self.hit_objects
             .iter()
-            .map(|obj| obj.to_osu_format_catch() )
+            .map(|obj| obj.to_str_catch() )
             .collect::<Vec<_>>()
             .join("\n")
     }
 
-    pub fn to_osu_format_mania(&self, soundbank: &mut SoundBank) -> String {
+    pub fn to_str_mania(&self, soundbank: &mut SoundBank) -> String {
         self.hit_objects
             .iter()
-            .map(|obj| obj.to_osu_format_mania(soundbank) )
+            .map(|obj| obj.to_str_mania(soundbank) )
             .collect::<Vec<_>>()
             .join("\n")
     }
 
-    pub fn to_osu_format_mania_no_soundbank(&self) -> String {
+    pub fn to_str_no_soundbank(&self) -> String {
         self.hit_objects
             .iter()
-            .map(|obj| obj.to_osu_format_mania_no_soundbank() )
+            .map(|obj| obj.to_str_mania_no_soundbank() )
             .collect::<Vec<_>>()
             .join("\n")
     }
 
-    pub fn to_osu_format_standard(&self) -> String {
-        self.to_osu_format()
+    pub fn to_str_standard(&self) -> String {
+        self.to_str()
     }
 }
 

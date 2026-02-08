@@ -225,5 +225,5 @@ pub(crate) fn to_osu_generic(
         hitobjects,
     };
 
-    Ok(osu_file.to_osu_format_mania(&mut soundbank))
+    Ok(osu_file.to_str_mania(&mut soundbank))
 }

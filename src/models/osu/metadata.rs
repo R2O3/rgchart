@@ -186,7 +186,7 @@ impl Metadata {
         !self.title_unicode.is_empty() || !self.artist_unicode.is_empty()
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut lines = Vec::new();
         
         lines.push(format!("Title: {}", self.title));

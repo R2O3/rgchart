@@ -247,7 +247,7 @@ impl General {
         self.mode == 3
     }
 
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         let mut lines = Vec::new();
         
         lines.push(format!("AudioFilename: {}", self.audio_filename));

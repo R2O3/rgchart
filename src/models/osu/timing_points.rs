@@ -59,7 +59,7 @@ impl TimingPoint {
         }
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         format!(
             "{},{},{},{},{},{},{},{}",
             self.time,
@@ -222,10 +222,10 @@ impl TimingPoints {
             .collect()
     }
     
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         self.timing_points
             .iter()
-            .map(|tp| tp.to_osu_format())
+            .map(|tp| tp.to_str())
             .collect::<Vec<_>>()
             .join("\n")
     }

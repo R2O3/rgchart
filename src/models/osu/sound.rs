@@ -86,7 +86,7 @@ impl FromStr for HitSample {
 }
 
 impl HitSample {
-    pub fn to_osu_format(&self) -> String {
+    pub fn to_str(&self) -> String {
         format!("{}:{}:{}:{}:{}", 
                 self.normal_set, 
                 self.addition_set, 
