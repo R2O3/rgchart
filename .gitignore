@@ -12,5 +12,5 @@ rgchart-web.tgz
 # private
 .npmrc
 
-# I don't think we really need this for this library
-Cargo.lock
+# dev
+/node_modules
