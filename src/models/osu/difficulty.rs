@@ -19,9 +19,9 @@ pub struct Difficulty {
 impl Default for Difficulty {
     fn default() -> Self {
         Self {
-            hp_drain_rate: 5.0,
+            hp_drain_rate: 8.5,
             circle_size: 5.0,
-            overall_difficulty: 5.0,
+            overall_difficulty: 8.0,
             approach_rate: 5.0,
             slider_multiplier: 1.4,
             slider_tick_rate: 1.0,

@@ -1,9 +1,10 @@
-use crate::models::common::*;
+use crate::common::TimingChangeType;
 use crate::models::generic::{GenericManiaChart, HitSoundType, SoundBank};
 use crate::models::osu::{self, *};
 
 #[allow(unused)]
 use crate::errors;
+use crate::KeyType;
 
 #[inline(always)]
 fn bpm_to_beatlength(bpm: &f32) -> f32 {
@@ -64,12 +65,8 @@ pub(crate) fn to_osu_generic(
     };
 
     let difficulty = osu::Difficulty {
-        hp_drain_rate: 8.5,
         circle_size: key_count as f32,
-        overall_difficulty: 8.0,
-        approach_rate: 5.0,
-        slider_multiplier: 1.4,
-        slider_tick_rate: 1.0,
+        ..Default::default()
     };
 
     let mut events = osu::Events {

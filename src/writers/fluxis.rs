@@ -24,7 +24,7 @@ pub(crate) fn to_fsc_generic(
         source: Some(chart.metadata.source.clone()),
         tags: chart.metadata.tags.join(" "),
         previewtime: chart.chartinfo.preview_time as i32,
-        ..fluxis::Metadata::default()
+        ..Default::default()
     };
 
     let timing_points = chart
@@ -33,7 +33,7 @@ pub(crate) fn to_fsc_generic(
         .map(|tp| fluxis::TimingPoint {
             time: tp.time as f32,
             bpm: tp.change.value,
-            ..fluxis::TimingPoint::default()
+            ..Default::default()
         })
         .collect();
 
@@ -43,7 +43,7 @@ pub(crate) fn to_fsc_generic(
         .map(|sv| fluxis::ScrollVelocity {
             time: sv.time as f32,
             multiplier: sv.change.value,
-            ..fluxis::ScrollVelocity::default()
+            ..Default::default()
         })
         .collect();
 
@@ -59,7 +59,7 @@ pub(crate) fn to_fsc_generic(
                     time,
                     lane,
                     hitsound: get_hitsound_type(HitSoundType::Normal),
-                    ..fluxis::HitObject::default()
+                    ..Default::default()
                 });
             }
             KeyType::SliderStart => {
@@ -74,7 +74,7 @@ pub(crate) fn to_fsc_generic(
                     lane,
                     holdtime: (slider_end_time - hitobject.time) as f32,
                     hitsound: get_hitsound_type(hitobject.keysound.hitsound_type),
-                    ..fluxis::HitObject::default()
+                    ..Default::default()
                 });
             }
             _ => continue,
@@ -92,7 +92,7 @@ pub(crate) fn to_fsc_generic(
         scroll_velocities,
         accuracy_difficulty: Some(chart.chartinfo.od),
         health_difficulty: Some(chart.chartinfo.hp),
-        ..FscFile::default()
+        ..Default::default()
     };
 
     let json_string = FscFile::to_str(&fsc_chart)?;
