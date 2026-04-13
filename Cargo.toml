@@ -19,6 +19,8 @@ exclude = [
     ".vscode/*",
     "test-wasm.sh",
     "scripts/*",
+    "dist-node/*",
+    "dist-web/*",
     "package.json"
 ]
 
