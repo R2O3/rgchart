@@ -21,6 +21,8 @@ pub struct ChartInfo {
     pub preview_time: i32,
     #[wasm_bindgen(getter_with_clone)]
     pub key_count: u8,
+    #[wasm_bindgen(getter_with_clone)]
+    pub bpm_affects_sv: bool,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -36,6 +38,7 @@ impl ChartInfo {
         audio_offset: i32,
         preview_time: i32,
         key_count: u8,
+        bpm_affects_sv: bool,
     ) -> Self {
         Self {
             difficulty_name,
@@ -47,6 +50,7 @@ impl ChartInfo {
             audio_offset,
             preview_time,
             key_count,
+            bpm_affects_sv,
         }
     }
 
@@ -61,6 +65,7 @@ impl ChartInfo {
             audio_offset: 0,
             preview_time: 0,
             key_count: 4,
+            bpm_affects_sv: false,
         }
     }
 }

@@ -44,8 +44,8 @@ pub struct QuaFile {
     #[serde(rename = "DifficultyName")]
     pub difficulty_name: String,
     
-    #[serde(rename = "BPMDoesNotAffectScrollVelocity", default = "default_bpm_does_not_affect_scroll_velocity")]
-    pub bpm_does_not_affect_scroll_velocity: bool,
+    #[serde(rename = "BPMDoesNotAffectScrollVelocity", skip_serializing_if = "Option::is_none", default = "default_bpm_does_not_affect_scroll_velocity")]
+    pub bpm_does_not_affect_scroll_velocity: Option<bool>,
     
     #[serde(rename = "InitialScrollVelocity", default = "default_initial_scroll_velocity")]
     pub initial_scroll_velocity: f32,
@@ -83,7 +83,7 @@ impl QuaFile {
 }
 
 fn default_id() -> i32 { -1i32 }
-fn default_bpm_does_not_affect_scroll_velocity() -> bool { true }
+fn default_bpm_does_not_affect_scroll_velocity() -> Option<bool> { Some(true) }
 fn default_initial_scroll_velocity() -> f32 { 1f32 }
 fn default_has_scratch_key() -> bool { false }
 

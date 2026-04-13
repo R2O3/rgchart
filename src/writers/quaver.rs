@@ -117,7 +117,7 @@ pub(crate) fn to_qua_generic(
         tags: chart.metadata.tags.join(","),
         creator: chart.metadata.creator.clone(),
         difficulty_name: chart.chartinfo.difficulty_name.clone(),
-        bpm_does_not_affect_scroll_velocity: true,
+        bpm_does_not_affect_scroll_velocity: Some(true),
         initial_scroll_velocity: 1.0,
         has_scratch_key: (key_count == 8 || key_count == 5),
         editor_layers: vec![],

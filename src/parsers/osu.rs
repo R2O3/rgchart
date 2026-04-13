@@ -93,6 +93,7 @@ pub(crate) fn from_osu_generic(
         od: osu_file.difficulty.overall_difficulty,
         hp: osu_file.difficulty.hp_drain_rate,
         key_count: osu_file.difficulty.circle_size as u8,
+        bpm_affects_sv: true,
         ..ChartInfo::empty()
     };
 

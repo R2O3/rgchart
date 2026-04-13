@@ -245,6 +245,8 @@ pub(crate) fn from_sm_generic(
     let mut metadata = Metadata::empty();
     let mut chartinfo = ChartInfo::empty();
 
+    chartinfo.bpm_affects_sv = false; 
+
     let mut bpms: (Vec<f32>, Vec<f32>) = (vec![0.0], vec![0.0]);
     let mut raw_bpms = ChartDefaults::RAW_BPMS.to_string();
     let mut stops = (vec![], vec![]);

@@ -133,6 +133,7 @@ pub(crate) fn from_fsc_generic(
         difficulty_name: fsc_file.metadata.difficulty,
         od: fsc_file.accuracy_difficulty.unwrap_or(8.0),
         hp: fsc_file.health_difficulty.unwrap_or(8.0),
+        bpm_affects_sv: false,
         ..ChartInfo::empty()
     };
 

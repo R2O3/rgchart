@@ -169,6 +169,7 @@ pub(crate) fn from_qua_generic(
         bg_path: quaver_file.background_file,
         key_count,
         difficulty_name: quaver_file.difficulty_name,
+        bpm_affects_sv: !quaver_file.bpm_does_not_affect_scroll_velocity.unwrap_or(true),
         ..ChartInfo::empty()
     };
 
