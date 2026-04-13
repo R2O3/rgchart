@@ -104,11 +104,12 @@ fn process_notes(
                 time,
                 beat,
                 lane,
-                key: Key::slider_start(Some(hitobject.end_time().unwrap_or(0.0) as i32)),
+                key: Key::slider_start(Some(hitobject.end_time().unwrap_or(0))),
                 keysound: key_sound,
+                group: hitobject.timing_group().map(|s| s.to_string()),
             };
 
-            let slider_end_time = hitobject.end_time().unwrap_or(0.0) as i32;
+            let slider_end_time = hitobject.end_time().unwrap_or(0);
             let end_time_beat = calculate_beat_from_time(slider_end_time, offset, (bpm_times, bpms));
 
             let slider_end = generic::HitObject {
@@ -117,6 +118,7 @@ fn process_notes(
                 lane,
                 key: Key::slider_end(),
                 keysound: KeySound::default(),
+                group: hitobject.timing_group().map(|s| s.to_string()),
             };
 
             hitobjects.add_hitobject_sorted(slider);
@@ -128,6 +130,7 @@ fn process_notes(
                 lane,
                 key: Key::normal(),
                 keysound: key_sound,
+                group: hitobject.timing_group().map(|s| s.to_string()),
             });
         }
     }

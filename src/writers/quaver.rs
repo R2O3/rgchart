@@ -74,7 +74,7 @@ pub(crate) fn to_qua_generic(
     let mut qua_hitobjects = Vec::new();
 
     for hitobject in chart.hitobjects.iter() {
-        let time = hitobject.time as f32;
+        let time = hitobject.time;
         let lane = hitobject.lane;
         let keysound = hitobject.keysound;
 
@@ -89,11 +89,7 @@ pub(crate) fn to_qua_generic(
                 });
             }
             KeyType::SliderStart => {
-                let slider_end_time = if let Some(end_time) = hitobject.key.slider_end_time() {
-                    end_time as f32
-                } else {
-                    0.0
-                };
+                let slider_end_time = hitobject.key.slider_end_time().unwrap_or(0);
 
                 qua_hitobjects.push(quaver::HitObject {
                     start_time: time,

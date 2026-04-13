@@ -158,6 +158,7 @@ impl HitObjectTimeline {
                     keysound: KeySound::default(),
                     key: *key,
                     lane: (lane_idx + 1) as u8,
+                    group: None, // this is for stepmania stuff and we don't need groups as of now
                 };
                 
                 let index = result.len();

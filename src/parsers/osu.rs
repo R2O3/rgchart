@@ -163,6 +163,7 @@ pub(crate) fn from_osu_generic(
                 lane: object_column,
                 key: Key::slider_start(Some(end_time)),
                 keysound: key_sound,
+                group: None
             };
 
             let end_time_beat = calculate_beat_from_time(end_time, start_time, (&bpm_times, &bpms));
@@ -173,6 +174,7 @@ pub(crate) fn from_osu_generic(
                 lane: object_column,
                 key: Key::slider_end(),
                 keysound: generic::KeySound::default(),
+                group: None
             };
 
             hitobjects.add_hitobject_sorted(slider_start);
@@ -184,6 +186,7 @@ pub(crate) fn from_osu_generic(
                 lane: object_column,
                 key: Key::normal(),
                 keysound: key_sound,
+                group: None
             });
         }
     }

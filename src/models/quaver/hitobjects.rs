@@ -1,44 +1,48 @@
 use serde::{Deserialize, Serialize};
 use crate::models::quaver::sound::KeySound;
 use crate::models::generic::sound;
-use crate::utils::serde::trim_float;
+use crate::utils::serde::{opt_f32_to_i32, f32_to_i32};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct HitObject {
-    #[serde(rename = "StartTime", serialize_with = "trim_float")]
-    pub start_time: f32,
+    #[serde(rename = "StartTime", serialize_with = "f32_to_i32")]
+    pub start_time: i32,
     
     #[serde(rename = "Lane")]
     pub lane: u8,
     
-    #[serde(rename = "EndTime", skip_serializing_if = "Option::is_none")]
-    pub endtime: Option<f32>,
+    #[serde(rename = "EndTime", skip_serializing_if = "Option::is_none", serialize_with = "opt_f32_to_i32")]
+    pub endtime: Option<i32>,
 
     #[serde(rename = "HitSound", skip_serializing_if = "Option::is_none")]
     pub hit_sound: Option<String>,
     
     #[serde(rename = "KeySounds")]
     pub key_sounds: Vec<KeySound>,
+
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub timing_group: Option<String>,
 }
 
 impl Default for HitObject {
     fn default() -> Self {
         Self {
-            start_time: 0.0,
+            start_time: 0,
             lane: 0,
             endtime: None,
             hit_sound: None,
-            key_sounds: Vec::new()
+            key_sounds: Vec::new(),
+            timing_group: None,
         }
     }
 }
 
 impl HitObject {
-    pub fn start_time(&self) -> f32 {
+    pub fn start_time(&self) -> i32 {
         self.start_time
     }
 
-    pub fn end_time(&self) -> Option<f32> {
+    pub fn end_time(&self) -> Option<i32> {
         self.endtime
     }
 
@@ -56,6 +60,10 @@ impl HitObject {
     
     pub fn hit_sound(&self) -> Option<&str> {
         self.hit_sound.as_deref()
+    }
+
+    pub fn timing_group(&self) -> Option<&str> {
+        self.timing_group.as_deref()
     }
 
     pub fn get_generic_keysound(&self) -> sound::KeySound {

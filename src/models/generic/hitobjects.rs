@@ -9,6 +9,7 @@ pub struct HitObject {
     pub keysound: KeySound,
     pub key: Key,
     pub lane: u8,
+    pub group: Option<String>,
 }
 
 // TODO: add wasm bindings for HitObject
@@ -45,7 +46,8 @@ impl HitObjects {
         beat: f32,
         keysound: KeySound,
         key: Key,
-        lane: u8
+        lane: u8,
+        group: Option<String>,
     ) {
         if key.key_type == KeyType::Empty {
             return;
@@ -56,6 +58,7 @@ impl HitObjects {
             keysound,
             key,
             lane,
+            group
         });
     }
 

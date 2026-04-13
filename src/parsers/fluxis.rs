@@ -64,6 +64,7 @@ fn process_notes(
                 lane: hitobject.lane as u8,
                 key: Key::slider_start(Some(hitobject.end_time() as i32)),
                 keysound: KeySound::default(),
+                group: hitobject.group.clone(),
             };
 
             let slider_end = HitObject {
@@ -72,6 +73,7 @@ fn process_notes(
                 lane: hitobject.lane as u8,
                 key: Key::slider_end(),
                 keysound: KeySound::default(),
+                group: hitobject.group,
             };
 
             hitobjects.add_hitobject_sorted(slider);
@@ -86,6 +88,7 @@ fn process_notes(
                 lane: hitobject.lane as u8,
                 key: Key::normal(),
                 keysound: KeySound::default(),
+                group: hitobject.group,
             });
         }
     }
