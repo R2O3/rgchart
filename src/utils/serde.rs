@@ -15,23 +15,6 @@ pub fn is_default_f32(value: &f32) -> bool {
     *value == 0.0
 }
 
-pub fn f32_to_i32<S>(value: &i32, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    serializer.serialize_f32(*value as f32)
-}
-
-pub fn opt_f32_to_i32<S>(value: &Option<i32>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: Serializer,
-{
-    match value {
-        Some(v) => serializer.serialize_f32(*v as f32),
-        None => serializer.serialize_none(),
-    }
-}
-
 pub fn process_bracket_sections<F>(string: &str, mut lambda: F) -> Result<(), Box<dyn std::error::Error>>
 where
     F: FnMut(&str, &str) -> Result<(), Box<dyn std::error::Error>>,

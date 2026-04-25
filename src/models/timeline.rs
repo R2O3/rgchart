@@ -6,11 +6,12 @@ use crate::models::generic::KeySound;
 use crate::models::generic::{TimingPoints, TimingChange};
 use crate::utils::rhythm::calculate_beat_from_time;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 #[repr(C)]
 pub struct TimelineTimingPoint {
     pub time: i32,
     pub value: f32,
+    pub group: String,
     pub change_type: TimingChangeType,
 }
 
@@ -291,10 +292,12 @@ impl TimingPointTimeline {
         for timing_point in &self.timeline {
             let time = timing_point.time;
             let beat = calculate_beat_from_time(time, offset, (&bpm_times, &bpms));
+            let group = &timing_point.group;
             
             timing_points.add(
                 time,
                 beat,
+                group.clone(),
                 TimingChange {
                     value: timing_point.value,
                     change_type: timing_point.change_type,

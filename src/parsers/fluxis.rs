@@ -16,6 +16,7 @@ fn process_timing_points(
         timeline.add_sorted(TimelineTimingPoint {
             time: timing_point.time as i32,
             value: timing_point.bpm,
+            group: String::new(),
             change_type: TimingChangeType::Bpm,
         });
     }
@@ -30,17 +31,73 @@ fn process_timing_points(
     Ok(())
 }
 
+fn add_sv(timeline: &mut TimingPointTimeline, sv: &fluxis::ScrollVelocity, group: &str) {
+    timeline.add_sorted(TimelineTimingPoint {
+        time: sv.time as i32,
+        value: sv.multiplier,
+        group: group.to_string(),
+        change_type: TimingChangeType::Sv,
+    });
+}
+
 fn process_sv(
     slider_velocities: Vec<fluxis::ScrollVelocity>,
     timeline: &mut TimingPointTimeline,
+    process_single_column_scroll: bool
 ) -> Result<(), Box<dyn std::error::Error>> {
     for sv in slider_velocities {
-        timeline.add_sorted(TimelineTimingPoint {
-            time: sv.time as i32,
-            value: sv.multiplier,
-            change_type: TimingChangeType::Sv,
-        });
+        let groups = sv.groups.as_ref();
+
+        match groups {
+            None => {
+                add_sv(timeline, &sv, "");
+            }
+
+            Some(groups) if groups.is_empty() => {
+                add_sv(timeline, &sv, "");
+            }
+
+            Some(groups) => {
+                if process_single_column_scroll {
+                    let mut has_dollar = false;
+
+                    for g in groups {
+                        if g.starts_with('$') {
+                            has_dollar = true;
+                        }
+
+                        add_sv(timeline, &sv, g);
+
+                        // this is necessary to make it so barlines are affected by SVs
+                        if has_dollar {
+                            add_sv(timeline, &sv, "");
+                        }
+                    }
+                }
+                else { // in this case any sv with a group starting with '$' will generate a groupless TimelineTimingPoint
+                    let mut has_dollar = false;
+                    let mut normal_groups = Vec::new();
+
+                    for g in groups {
+                        if g.starts_with('$') {
+                            has_dollar = true;
+                        } else {
+                            normal_groups.push(g);
+                        }
+                    }
+
+                    if has_dollar {
+                        add_sv(timeline, &sv, "");
+                    }
+
+                    for g in normal_groups {
+                        add_sv(timeline, &sv, g);
+                    }
+                }
+            }
+        }
     }
+
     Ok(())
 }
 
@@ -51,11 +108,34 @@ fn process_notes(
     offset: i32,
     bpms_times: &Vec<i32>,
     bpms: &Vec<f32>,
+    use_column_as_group: bool
 ) -> Result<(), Box<dyn std::error::Error>> {
     let key_count = chartinfo.key_count as usize;
 
     for hitobject in fluxis_hitobjects {
         let beat = calculate_beat_from_time(hitobject.time as i32, offset, (bpms_times, bpms));
+
+        let group = if let Some(group) = &hitobject.group {
+            if group.is_empty() {
+                if use_column_as_group {
+                    Some(format!("${}", hitobject.lane))
+                }
+                else {
+                    None
+                }
+            }
+            else {
+                Some(group.clone())
+            }
+        }
+        else {
+            if use_column_as_group {
+                Some(format!("${}", hitobject.lane))
+            }
+            else {
+                None
+            }
+        };
 
         if hitobject.is_ln() {
             let slider = HitObject {
@@ -64,7 +144,7 @@ fn process_notes(
                 lane: hitobject.lane as u8,
                 key: Key::slider_start(Some(hitobject.end_time() as i32)),
                 keysound: KeySound::default(),
-                group: hitobject.group.clone(),
+                group: group.clone(),
             };
 
             let slider_end = HitObject {
@@ -73,7 +153,7 @@ fn process_notes(
                 lane: hitobject.lane as u8,
                 key: Key::slider_end(),
                 keysound: KeySound::default(),
-                group: hitobject.group,
+                group: group.clone(),
             };
 
             hitobjects.add_hitobject_sorted(slider);
@@ -88,7 +168,7 @@ fn process_notes(
                 lane: hitobject.lane as u8,
                 key: Key::normal(),
                 keysound: KeySound::default(),
-                group: hitobject.group,
+                group: group.clone(),
             });
         }
     }
@@ -101,6 +181,9 @@ fn process_notes(
 pub(crate) fn from_fsc_generic(
     raw_chart: &str,
 ) -> Result<GenericManiaChart, Box<dyn std::error::Error>> {
+    // idk where this should be configurable, but we might want to have this false sometimes to make editing the sv on quaver easier
+    let process_single_column_scroll= true;
+
     let fsc_file = FscFile::from_str(&raw_chart)?;
 
     let key_count = fsc_file.key_count();
@@ -144,7 +227,7 @@ pub(crate) fn from_fsc_generic(
     let offset = fsc_file.timing_points[0].time as i32;
 
     process_timing_points(fsc_file.timing_points, &mut chartinfo, &mut timeline)?;
-    process_sv(fsc_file.scroll_velocities, &mut timeline)?;
+    process_sv(fsc_file.scroll_velocities, &mut timeline, process_single_column_scroll)?;
     timeline.to_timing_points(&mut timing_points, chartinfo.audio_offset);
     process_notes(
         fsc_file.hit_objects,
@@ -153,6 +236,7 @@ pub(crate) fn from_fsc_generic(
         offset,
         &timing_points.bpms_times(),
         &timing_points.bpms(),
+        process_single_column_scroll
     )?;
 
     Ok(GenericManiaChart::new(

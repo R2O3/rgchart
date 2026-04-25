@@ -1,17 +1,16 @@
 use serde::{Deserialize, Serialize};
 use crate::models::quaver::sound::KeySound;
 use crate::models::generic::sound;
-use crate::utils::serde::{opt_f32_to_i32, f32_to_i32};
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct HitObject {
-    #[serde(rename = "StartTime", serialize_with = "f32_to_i32")]
+    #[serde(rename = "StartTime")]
     pub start_time: i32,
     
     #[serde(rename = "Lane")]
     pub lane: u8,
     
-    #[serde(rename = "EndTime", skip_serializing_if = "Option::is_none", serialize_with = "opt_f32_to_i32")]
+    #[serde(rename = "EndTime", skip_serializing_if = "Option::is_none")]
     pub endtime: Option<i32>,
 
     #[serde(rename = "HitSound", skip_serializing_if = "Option::is_none")]
@@ -20,7 +19,7 @@ pub struct HitObject {
     #[serde(rename = "KeySounds")]
     pub key_sounds: Vec<KeySound>,
 
-    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "TimingGroup", skip_serializing_if = "Option::is_none")]
     pub timing_group: Option<String>,
 }
 

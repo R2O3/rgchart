@@ -1,7 +1,10 @@
+use std::collections::HashMap;
+
 use serde::{Deserialize, Serialize};
 use crate::models::quaver::{
     editor::*,
     sound::*,
+    timing_group::*,
     timing_points::*,
     hitobjects::*,
 };
@@ -70,6 +73,9 @@ pub struct QuaFile {
 
     #[serde(rename = "HitObjects")]
     pub hitobjects: Vec<HitObject>,
+
+    #[serde(rename = "TimingGroups", default, skip_serializing_if = "HashMap::is_empty")]
+    pub timing_groups: HashMap<String,TimingGroup>
 }
 
 impl QuaFile {
@@ -111,6 +117,7 @@ impl Default for QuaFile {
             timing_points: Vec::new(),
             slider_velocities: Vec::new(),
             hitobjects: Vec::new(),
+            timing_groups: HashMap::new()
         }
     }
 }

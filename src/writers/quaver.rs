@@ -1,6 +1,9 @@
+use std::collections::HashMap;
+
 use crate::models::common::*;
 use crate::models::generic::{GenericManiaChart, HitSoundType, KeySound};
 use crate::models::quaver::{self, QuaFile};
+use crate::quaver::ScrollGroupData;
 use crate::utils::quaver::get_mode_from_u8;
 
 fn get_hitsound_type(hitsound_type: HitSoundType) -> Option<String> {
@@ -62,14 +65,31 @@ pub(crate) fn to_qua_generic(
         })
         .collect();
 
-    let slider_velocities = chart
-        .timing_points
-        .sv_changes()
-        .map(|sv| quaver::SliderVelocity {
+    let mut timing_groups = HashMap::new();
+    let mut slider_velocities = Vec::new();
+
+    for sv in chart.timing_points.sv_changes() {
+        let quaver_sv = quaver::SliderVelocity {
             start_time: sv.time as f32,
             multiplier: Some(sv.change.value),
-        })
-        .collect();
+        };
+
+        if sv.group.is_empty() {
+            slider_velocities.push(quaver_sv);
+        }
+        else {
+            if !timing_groups.contains_key(&sv.group) {
+                timing_groups.insert(sv.group.clone(), quaver::TimingGroup::ScrollGroup(ScrollGroupData {
+                    scroll_velocities: Vec::new(),
+                    initial_scroll_velocity: 1.0
+                }));
+            }
+
+            if let Some(quaver::TimingGroup::ScrollGroup(group)) = timing_groups.get_mut(&sv.group) {
+                group.scroll_velocities.push(quaver_sv);
+            }
+        }
+    }
 
     let mut qua_hitobjects = Vec::new();
 
@@ -77,6 +97,7 @@ pub(crate) fn to_qua_generic(
         let time = hitobject.time;
         let lane = hitobject.lane;
         let keysound = hitobject.keysound;
+        let timing_group = hitobject.group.clone();
 
         match hitobject.key.key_type {
             KeyType::Normal => {
@@ -85,6 +106,7 @@ pub(crate) fn to_qua_generic(
                     lane,
                     hit_sound: get_hitsound_type(keysound.hitsound_type),
                     key_sounds: create_keysounds(keysound),
+                    timing_group: timing_group,
                     ..Default::default()
                 });
             }
@@ -97,6 +119,7 @@ pub(crate) fn to_qua_generic(
                     endtime: Some(slider_end_time),
                     hit_sound: get_hitsound_type(keysound.hitsound_type),
                     key_sounds: create_keysounds(keysound),
+                    timing_group: timing_group,
                     ..Default::default()
                 });
             }
@@ -126,6 +149,7 @@ pub(crate) fn to_qua_generic(
         timing_points,
         slider_velocities,
         hitobjects: qua_hitobjects,
+        timing_groups: timing_groups
     };
 
     let yaml_string = QuaFile::to_str(&qua_chart)?;

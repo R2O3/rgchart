@@ -11,6 +11,7 @@ pub struct TimingChange {
 pub struct TimingPoint {
     pub time: i32,
     pub beat: f32,
+    pub group: String,
     pub change: TimingChange,
 }
 
@@ -40,10 +41,11 @@ impl TimingPoints {
         Self { points }
     }
 
-    pub fn add(&mut self, time: i32, beat: f32, change: TimingChange) {
+    pub fn add(&mut self, time: i32, beat: f32, group: String, change: TimingChange) {
         self.points.push(TimingPoint {
             time,
             beat,
+            group: group,
             change,
         });
     }

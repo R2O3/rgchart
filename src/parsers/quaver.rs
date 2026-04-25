@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::errors;
 use crate::models::common::*;
 use crate::models::generic::{
@@ -13,6 +15,7 @@ use crate::models::generic::{
 };
 use crate::models::quaver::{self, QuaFile};
 use crate::models::timeline::{TimelineOps, TimelineTimingPoint, TimingPointTimeline};
+use crate::quaver::TimingGroup;
 use crate::utils::quaver::get_keycount_from_str;
 use crate::utils::rhythm::calculate_beat_from_time;
 
@@ -25,6 +28,7 @@ fn process_timing_points(
         timeline.add_sorted(TimelineTimingPoint {
             time: timing_point.start_time as i32,
             value: timing_point.bpm,
+            group: String::new(),
             change_type: TimingChangeType::Bpm,
         });
     }
@@ -47,8 +51,29 @@ fn process_sv(
         timeline.add_sorted(TimelineTimingPoint {
             time: sv.start_time as i32,
             value: sv.multiplier.unwrap_or(1.0),
+            group: String::new(),
             change_type: TimingChangeType::Sv,
         });
+    }
+    Ok(())
+}
+
+fn process_timing_groups(
+    timing_groups: HashMap<String, TimingGroup>,
+    timeline: &mut TimingPointTimeline,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for (name, timing_group) in &timing_groups {
+        let quaver::TimingGroup::ScrollGroup(group) = timing_group;
+        // TODO: handle initial velocity?
+
+        for sv in &group.scroll_velocities {
+            timeline.add_sorted(TimelineTimingPoint {
+                time: sv.start_time as i32,
+                value: sv.multiplier.unwrap_or(1.0),
+                group: name.clone(),
+                change_type: TimingChangeType::Sv,
+             });
+        }
     }
     Ok(())
 }
@@ -183,6 +208,7 @@ pub(crate) fn from_qua_generic(
     process_soundeffects(quaver_file.sound_effects, &mut soundbank)?;
     process_timing_points(quaver_file.timing_points, &mut chartinfo, &mut timeline)?;
     process_sv(quaver_file.slider_velocities, &mut timeline)?;
+    process_timing_groups(quaver_file.timing_groups, &mut timeline)?;
 
     let offset = chartinfo.audio_offset;
     timeline.to_timing_points(&mut timing_points, chartinfo.audio_offset);

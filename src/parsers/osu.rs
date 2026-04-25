@@ -113,6 +113,7 @@ pub(crate) fn from_osu_generic(
             timing_points.add(
                 tp.time as i32,
                 0.0,
+                String::new(),
                 TimingChange {
                     change_type: TimingChangeType::Bpm,
                     value: bpm,
@@ -123,6 +124,7 @@ pub(crate) fn from_osu_generic(
             timing_points.add(
                 tp.time as i32,
                 0.0,
+                String::new(),
                 TimingChange {
                     change_type: TimingChangeType::Sv,
                     value: sv,
