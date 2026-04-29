@@ -15,6 +15,12 @@ pub struct TimingPoint {
     pub change: TimingChange,
 }
 
+impl TimingPoint {
+    pub fn has_default_group_qua(&self) -> bool {
+        return self.group.is_empty() || self.group == "$Default" || self.group == "$Global";
+    }
+}
+
 // TODO: add wasm bindings for Timings
 #[wasm_bindgen]
 #[repr(C)]

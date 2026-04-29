@@ -115,26 +115,10 @@ fn process_notes(
     for hitobject in fluxis_hitobjects {
         let beat = calculate_beat_from_time(hitobject.time as i32, offset, (bpms_times, bpms));
 
-        let group = if let Some(group) = &hitobject.group {
-            if group.is_empty() {
-                if use_column_as_group {
-                    Some(format!("${}", hitobject.lane))
-                }
-                else {
-                    None
-                }
-            }
-            else {
-                Some(group.clone())
-            }
-        }
-        else {
-            if use_column_as_group {
-                Some(format!("${}", hitobject.lane))
-            }
-            else {
-                None
-            }
+        let group = match &hitobject.group {
+            Some(group) if !group.is_empty() => Some(group.clone()),
+            _ if use_column_as_group => Some(format!("${}", hitobject.lane)),
+            _ => None,
         };
 
         if hitobject.is_ln() {

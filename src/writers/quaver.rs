@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::models::common::*;
 use crate::models::generic::{GenericManiaChart, HitSoundType, KeySound};
 use crate::models::quaver::{self, QuaFile};
-use crate::quaver::ScrollGroupData;
+use crate::quaver::ScrollGroup;
 use crate::utils::quaver::get_mode_from_u8;
 
 fn get_hitsound_type(hitsound_type: HitSoundType) -> Option<String> {
@@ -74,12 +74,12 @@ pub(crate) fn to_qua_generic(
             multiplier: Some(sv.change.value),
         };
 
-        if sv.group.is_empty() {
+        if sv.has_default_group_qua() {
             slider_velocities.push(quaver_sv);
         }
         else {
             if !timing_groups.contains_key(&sv.group) {
-                timing_groups.insert(sv.group.clone(), quaver::TimingGroup::ScrollGroup(ScrollGroupData {
+                timing_groups.insert(sv.group.clone(), quaver::TimingGroup::ScrollGroup(ScrollGroup {
                     scroll_velocities: Vec::new(),
                     initial_scroll_velocity: 1.0
                 }));
