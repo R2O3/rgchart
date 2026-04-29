@@ -35,7 +35,7 @@ fn fsc_to_qua_test() {
 }
 
 #[test]
-fn fsc_to_qua_test_sv() {
+fn fsc_to_qua_test_sv_groups() {
     parse_and_convert!(
         fsc_to_qua,
         "./tests/Maps/fluXis/1704_titleHyperflipLong/1773816949.fsc",

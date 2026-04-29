@@ -72,7 +72,7 @@ fn process_timing_groups(
                 value: sv.multiplier.unwrap_or(1.0),
                 group: name.clone(),
                 change_type: TimingChangeType::Sv,
-             });
+            });
         }
     }
     Ok(())
