@@ -141,6 +141,7 @@ fn process_timing_points(bpms_and_stops: &BpmsAndStops, start_time: i32) -> Timi
                     timeline.add(TimelineTimingPoint {
                         time: insert_time,
                         value: *value,
+                        group: String::new(),
                         change_type: TimingChangeType::Bpm,
                     });
                     None
@@ -155,6 +156,7 @@ fn process_timing_points(bpms_and_stops: &BpmsAndStops, start_time: i32) -> Timi
         timeline.add(TimelineTimingPoint {
             time: stop_time,
             value: 0.0,
+            group: String::new(),
             change_type: TimingChangeType::Sv,
         });
 
@@ -163,6 +165,7 @@ fn process_timing_points(bpms_and_stops: &BpmsAndStops, start_time: i32) -> Timi
         timeline.add(TimelineTimingPoint {
             time: stop_end_time,
             value: 1.0,
+            group: String::new(),
             change_type: TimingChangeType::Sv,
         });
     }

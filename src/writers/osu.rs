@@ -123,16 +123,20 @@ pub(crate) fn to_osu_generic(
                 });
             }
             TimingChangeType::Sv => {
-                timing_points.add_timing_point(osu::TimingPoint {
-                    time: timing_point.time as f32,
-                    beat_length: multiplier_to_beatlength(&timing_point.change.value),
-                    meter: 4,
-                    sample_set: 1,
-                    sample_index: 0,
-                    volume: 100,
-                    uninherited: false,
-                    effects: 0,
-                });
+                // TODO: allow to configure which SV groups we want to convert?
+                //       only assume default group for now
+                if timing_point.has_default_group_qua() {
+                    timing_points.add_timing_point(osu::TimingPoint {
+                        time: timing_point.time as f32,
+                        beat_length: multiplier_to_beatlength(&timing_point.change.value),
+                        meter: 4,
+                        sample_set: 1,
+                        sample_index: 0,
+                        volume: 100,
+                        uninherited: false,
+                        effects: 0,
+                    });
+                }
             }
             _ => {}
         }
