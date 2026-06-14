@@ -1,6 +1,23 @@
 use serde::{Deserialize, Serialize};
+use crate::KeyType;
 use crate::models::quaver::sound::KeySound;
 use crate::models::generic::sound;
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub enum QuaverHitType {
+    #[serde(rename = "Normal")]
+    NormalOrHold,
+    Mine,
+}
+
+impl QuaverHitType {
+    pub fn to_generic(&self) -> KeyType {
+        match self {
+            QuaverHitType::NormalOrHold => KeyType::Normal,
+            QuaverHitType::Mine => KeyType::Mine,
+        }
+    }
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 pub struct HitObject {
@@ -15,6 +32,9 @@ pub struct HitObject {
 
     #[serde(rename = "HitSound", skip_serializing_if = "Option::is_none")]
     pub hit_sound: Option<String>,
+
+    #[serde(rename = "Type")]
+    pub hit_type: QuaverHitType,
     
     #[serde(rename = "KeySounds")]
     pub key_sounds: Vec<KeySound>,
@@ -30,6 +50,7 @@ impl Default for HitObject {
             lane: 0,
             endtime: None,
             hit_sound: None,
+            hit_type: QuaverHitType::NormalOrHold,
             key_sounds: Vec::new(),
             timing_group: None,
         }

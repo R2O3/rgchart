@@ -137,39 +137,62 @@ fn process_notes(
             }
         };
 
-        if hitobject.is_ln() {
-            let slider = HitObject {
-                time: hitobject.time as i32,
-                beat,
-                lane: hitobject.lane as u8,
-                key: Key::slider_start(Some(hitobject.end_time() as i32)),
-                keysound: KeySound::default(),
-                group: group.clone(),
-            };
+        match hitobject.hit_type {
+            fluxis::FluXisHitType::NormalOrHold => {
+                if hitobject.is_ln() {
+                    let slider = HitObject {
+                        time: hitobject.time as i32,
+                        beat,
+                        lane: hitobject.lane as u8,
+                        key: Key::slider_start(Some(hitobject.end_time() as i32)),
+                        keysound: KeySound::default(),
+                        group: group.clone(),
+                    };
 
-            let slider_end = HitObject {
-                time: hitobject.end_time() as i32,
-                beat,
-                lane: hitobject.lane as u8,
-                key: Key::slider_end(),
-                keysound: KeySound::default(),
-                group: group.clone(),
-            };
+                    let slider_end = HitObject {
+                        time: hitobject.end_time() as i32,
+                        beat,
+                        lane: hitobject.lane as u8,
+                        key: Key::slider_end(),
+                        keysound: KeySound::default(),
+                        group: group.clone(),
+                    };
 
-            hitobjects.add_hitobject_sorted(slider);
-            hitobjects.add_hitobject_sorted(slider_end);
-        } else {
-            if hitobject.is_tick() {
-                continue; // skipping ticks until I think of a solution for them
-            }
-            hitobjects.add_hitobject_sorted(HitObject {
-                time: hitobject.time as i32,
-                beat,
-                lane: hitobject.lane as u8,
-                key: Key::normal(),
-                keysound: KeySound::default(),
-                group: group.clone(),
-            });
+                    hitobjects.add_hitobject_sorted(slider);
+                    hitobjects.add_hitobject_sorted(slider_end);
+                } else {
+                    hitobjects.add_hitobject_sorted(HitObject {
+                        time: hitobject.time as i32,
+                        beat,
+                        lane: hitobject.lane as u8,
+                        key: Key::normal(),
+                        keysound: KeySound::default(),
+                        group: group.clone(),
+                    });
+                }
+            },
+            fluxis::FluXisHitType::Landmine => {
+                let endtime = hitobject.is_ln().then(|| hitobject.end_time() as i32);
+
+                hitobjects.add_hitobject_sorted(HitObject {
+                        time: hitobject.time as i32,
+                        beat,
+                        lane: hitobject.lane as u8,
+                        key: Key::mine(endtime),
+                        keysound: KeySound::default(),
+                        group: group.clone(),
+                    });
+            },
+            fluxis::FluXisHitType::Tick => {
+                hitobjects.add_hitobject_sorted(HitObject {
+                        time: hitobject.time as i32,
+                        beat,
+                        lane: hitobject.lane as u8,
+                        key: Key::tick(),
+                        keysound: KeySound::default(),
+                        group: group.clone(),
+                    });
+            },
         }
     }
 

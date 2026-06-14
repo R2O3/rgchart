@@ -1,6 +1,26 @@
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
+use crate::KeyType;
 use crate::models::generic::sound;
 use crate::utils::serde::{is_default_f32};
+
+#[derive(Debug, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(u8)]
+pub enum FluXisHitType {
+    NormalOrHold = 0,
+    Tick = 1,
+    Landmine = 2,
+}
+
+impl FluXisHitType {
+    pub fn to_generic(&self) -> KeyType {
+        match self {
+            FluXisHitType::NormalOrHold => KeyType::Normal,
+            FluXisHitType::Tick => KeyType::Tick,
+            FluXisHitType::Landmine => KeyType::Mine,
+        }
+    }
+}
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct HitObject {
@@ -14,12 +34,15 @@ pub struct HitObject {
     pub holdtime: f32,
     
     pub hitsound: String,
+
+    #[serde(default, skip_serializing_if = "is_default_hidden")]
+    pub hidden: bool,
     
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
     
     #[serde(rename = "type")]
-    pub is_tick: i8,
+    pub hit_type: FluXisHitType,
 }
 
 impl Default for HitObject {
@@ -30,23 +53,28 @@ impl Default for HitObject {
             visual_lane: 0.0,
             holdtime: 0.0,
             hitsound: ":normal".to_string(),
+            hidden: false,
             group: None,
-            is_tick: 0,
+            hit_type: FluXisHitType::NormalOrHold,
         }
     }
 }
 
 impl HitObject {
     pub fn is_normal(&self) -> bool {
-        self.holdtime <= 0.0 && self.is_tick == 0
+        self.holdtime <= 0.0 && self.hit_type == FluXisHitType::NormalOrHold
     }
 
     pub fn is_ln(&self) -> bool {
-        self.holdtime > 0.0 && self.is_tick == 0
+        self.holdtime > 0.0 && self.hit_type == FluXisHitType::NormalOrHold
     }
     
     pub fn is_tick(&self) -> bool {
-        self.is_tick == 1
+        self.hit_type == FluXisHitType::Tick
+    }
+
+    pub fn is_landmine(&self) -> bool {
+        self.hit_type == FluXisHitType::Landmine
     }
     
     pub fn end_time(&self) -> f32 {
@@ -75,8 +103,9 @@ impl HitObject {
             visual_lane: 0.0,
             holdtime: 0.0,
             hitsound: ":normal".to_string(),
+            hidden: false,
             group: None,
-            is_tick: 0,
+            hit_type: FluXisHitType::NormalOrHold,
         }
     }
     
@@ -87,8 +116,9 @@ impl HitObject {
             visual_lane: 0.0,
             holdtime,
             hitsound: ":normal".to_string(),
+            hidden: false,
             group: None,
-            is_tick: 0,
+            hit_type: FluXisHitType::NormalOrHold,
         }
     }
     
@@ -99,8 +129,11 @@ impl HitObject {
             visual_lane,
             holdtime: 0.0,
             hitsound: ":normal".to_string(),
+            hidden: false,
             group: None,
-            is_tick: 1,
+            hit_type: FluXisHitType::Tick,
         }
     }
 }
+
+fn is_default_hidden(value: &bool) -> bool { *value == false }

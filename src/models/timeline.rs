@@ -116,6 +116,11 @@ impl HitObjectTimeline {
                                 temp_row[lane] = obj.key;
                             }
                         },
+                        KeyType::Mine => {
+                            if temp_row[lane].key_type != KeyType::Mine {
+                                temp_row[lane] = obj.key;
+                            }
+                        },
                         _ => {}
                     }
                 }
@@ -168,7 +173,7 @@ impl HitObjectTimeline {
                 match key.key_type {
                     KeyType::SliderStart => {
                         slider_start_queues[lane_idx].push_back(index);
-                    }
+                    },
                     KeyType::SliderEnd => {
                         slider_end_indices.push(index);
                     }

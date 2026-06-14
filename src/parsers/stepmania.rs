@@ -93,7 +93,7 @@ pub(crate) fn get_sm_note_type(note: char) -> Key {
         '2' => Key::slider_start(None),
         '3' => Key::slider_end(),
         '4' => Key::slider_start(None),
-        'M' => Key::mine(),
+        'M' => Key::mine(None),
         'F' => Key::fake(),
         _ => Key::unknown(),
     }

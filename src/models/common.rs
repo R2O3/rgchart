@@ -89,6 +89,7 @@ pub enum KeyType {
     SliderEnd,
     Mine,
     Fake,
+    Tick,
     Unknown,
 }
 
@@ -142,10 +143,10 @@ impl Key {
     }
 
     #[wasm_bindgen]
-    pub fn mine() -> Self {
+    pub fn mine(value: Option<i32>) -> Self {
         Self {
             key_type: KeyType::Mine,
-            slider_end_time: None,
+            slider_end_time: value,
         }
     }
 
@@ -153,6 +154,14 @@ impl Key {
     pub fn fake() -> Self {
         Self {
             key_type: KeyType::Fake,
+            slider_end_time: None,
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn tick() -> Self {
+        Self {
+            key_type: KeyType::Tick,
             slider_end_time: None,
         }
     }

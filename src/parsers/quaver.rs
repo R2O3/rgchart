@@ -17,7 +17,7 @@ use crate::models::quaver::{self, QuaFile};
 use crate::models::timeline::{TimelineOps, TimelineTimingPoint, TimingPointTimeline};
 use crate::quaver::TimingGroup;
 use crate::utils::quaver::get_keycount_from_str;
-use crate::utils::rhythm::calculate_beat_from_time;
+use crate::utils::rhythm::{calculate_beat_from_time, get_ms_per_beat_at};
 
 fn process_timing_points(
     timing_points: Vec<quaver::TimingPoint>,
@@ -124,39 +124,93 @@ fn process_notes(
 
         let beat = calculate_beat_from_time(time, offset, (bpm_times, bpms));
 
-        if hitobject.is_ln() {
-            let slider = generic::HitObject {
-                time,
-                beat,
-                lane,
-                key: Key::slider_start(Some(hitobject.end_time().unwrap_or(0))),
-                keysound: key_sound,
-                group: hitobject.timing_group().map(|s| s.to_string()),
-            };
+        match hitobject.hit_type {
+            quaver::QuaverHitType::NormalOrHold => {
+                if hitobject.is_ln() {
+                    let slider = generic::HitObject {
+                        time,
+                        beat,
+                        lane,
+                        key: Key::slider_start(Some(hitobject.end_time().unwrap_or(0))),
+                        keysound: key_sound,
+                        group: hitobject.timing_group().map(|s| s.to_string()),
+                    };
 
-            let slider_end_time = hitobject.end_time().unwrap_or(0);
-            let end_time_beat = calculate_beat_from_time(slider_end_time, offset, (bpm_times, bpms));
+                    let slider_end_time = hitobject.end_time().unwrap_or(0);
+                    let end_time_beat = calculate_beat_from_time(slider_end_time, offset, (bpm_times, bpms));
 
-            let slider_end = generic::HitObject {
-                time: slider_end_time,
-                beat: end_time_beat,
-                lane,
-                key: Key::slider_end(),
-                keysound: KeySound::default(),
-                group: hitobject.timing_group().map(|s| s.to_string()),
-            };
+                    let slider_end = generic::HitObject {
+                        time: slider_end_time,
+                        beat: end_time_beat,
+                        lane,
+                        key: Key::slider_end(),
+                        keysound: KeySound::default(),
+                        group: hitobject.timing_group().map(|s| s.to_string()),
+                    };
 
-            hitobjects.add_hitobject_sorted(slider);
-            hitobjects.add_hitobject_sorted(slider_end);
-        } else {
-            hitobjects.add_hitobject_sorted(generic::HitObject {
-                time,
-                beat,
-                lane,
-                key: Key::normal(),
-                keysound: key_sound,
-                group: hitobject.timing_group().map(|s| s.to_string()),
-            });
+                    hitobjects.add_hitobject_sorted(slider);
+                    hitobjects.add_hitobject_sorted(slider_end);
+                } else {
+                    hitobjects.add_hitobject_sorted(generic::HitObject {
+                        time,
+                        beat,
+                        lane,
+                        key: Key::normal(),
+                        keysound: key_sound,
+                        group: hitobject.timing_group().map(|s| s.to_string()),
+                    });
+                }
+            },
+            quaver::QuaverHitType::Mine => {
+                if hitobject.is_ln() {
+                    // most games doesn't support LN mines, so let's just put a bunch of mines every 1/4 beat
+                    // we do have support for LN mines but, we're expanding the LNs in the quaver parser instead of doing it in every writer, hence Key::mine(None)
+                    let end_time = hitobject.end_time().unwrap_or(0) as f32;
+                    let mut t = time as f32;
+                    let mut last_placed = t;
+
+                    while t < end_time {
+                        // in case the bpm changes during the LN mine (idk might happen on some weird maps)
+                        let ms_per_beat = get_ms_per_beat_at(t as i32, bpm_times, bpms);
+                        let beat = calculate_beat_from_time(t as i32, offset, (bpm_times, bpms));
+
+                        hitobjects.add_hitobject_sorted(generic::HitObject {
+                            time: t as i32,
+                            beat,
+                            lane,
+                            key: Key::mine(None),
+                            keysound: KeySound::default(),
+                            group: hitobject.timing_group().map(|s| s.to_string()),
+                        });
+
+                        last_placed = t;
+                        t += ms_per_beat / 4.0;
+                    }
+
+                    // if the endtime is too far from the last mine we placed then put a mine directly at the endtime
+                    let ms_per_beat_at_end = get_ms_per_beat_at(end_time as i32, bpm_times, bpms);
+                    if (last_placed - end_time).abs() > ms_per_beat_at_end / 16.0 {
+                        let end_beat = calculate_beat_from_time(end_time as i32, offset, (bpm_times, bpms));
+                        hitobjects.add_hitobject_sorted(generic::HitObject {
+                            time: end_time as i32,
+                            beat: end_beat,
+                            lane,
+                            key: Key::mine(None),
+                            keysound: KeySound::default(),
+                            group: hitobject.timing_group().map(|s| s.to_string()),
+                        });
+                    }
+                } else {
+                    hitobjects.add_hitobject_sorted(generic::HitObject {
+                        time,
+                        beat,
+                        lane,
+                        key: Key::mine(None),
+                        keysound: key_sound,
+                        group: hitobject.timing_group().map(|s| s.to_string()),
+                    });
+                }
+            },
         }
     }
 

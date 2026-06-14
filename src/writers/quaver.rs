@@ -106,10 +106,11 @@ pub(crate) fn to_qua_generic(
                     lane,
                     hit_sound: get_hitsound_type(keysound.hitsound_type),
                     key_sounds: create_keysounds(keysound),
+                    hit_type: quaver::QuaverHitType::NormalOrHold,
                     timing_group: timing_group,
                     ..Default::default()
                 });
-            }
+            },
             KeyType::SliderStart => {
                 let slider_end_time = hitobject.key.slider_end_time().unwrap_or(0);
 
@@ -119,10 +120,22 @@ pub(crate) fn to_qua_generic(
                     endtime: Some(slider_end_time),
                     hit_sound: get_hitsound_type(keysound.hitsound_type),
                     key_sounds: create_keysounds(keysound),
+                    hit_type: quaver::QuaverHitType::NormalOrHold,
                     timing_group: timing_group,
                     ..Default::default()
                 });
-            }
+            },
+            KeyType::Mine => {
+               qua_hitobjects.push(quaver::HitObject {
+                    start_time: time,
+                    lane,
+                    hit_sound: get_hitsound_type(keysound.hitsound_type),
+                    key_sounds: create_keysounds(keysound),
+                    hit_type: quaver::QuaverHitType::Mine,
+                    timing_group: timing_group,
+                    ..Default::default()
+                });
+            },
             _ => continue,
         }
     }

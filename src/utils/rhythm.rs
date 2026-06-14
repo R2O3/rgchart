@@ -167,3 +167,13 @@ pub fn calculate_time_from_beat(
 
     total_time as i32
 }
+
+pub fn get_ms_per_beat_at(time: i32, bpm_times: &[i32], bpms: &[f32]) -> f32 {
+    let idx = bpm_times.partition_point(|&t| t <= time);
+    let bpm = if idx == 0 {
+        bpms.first().copied().unwrap_or(120.0)
+    } else {
+        bpms[idx - 1]
+    };
+    60_000.0 / bpm
+}

@@ -59,9 +59,10 @@ pub(crate) fn to_fsc_generic(
                     time,
                     lane,
                     hitsound: get_hitsound_type(HitSoundType::Normal),
+                    hit_type: fluxis::FluXisHitType::NormalOrHold,
                     ..Default::default()
                 });
-            }
+            },
             KeyType::SliderStart => {
                 let slider_end_time = if let Some(time) = hitobject.key.slider_end_time() {
                     time
@@ -74,9 +75,19 @@ pub(crate) fn to_fsc_generic(
                     lane,
                     holdtime: (slider_end_time - hitobject.time) as f32,
                     hitsound: get_hitsound_type(hitobject.keysound.hitsound_type),
+                    hit_type: fluxis::FluXisHitType::NormalOrHold,
                     ..Default::default()
                 });
-            }
+            },
+            KeyType::Mine => {
+                fsc_hitobjects.push(fluxis::HitObject {
+                    time,
+                    lane,
+                    hitsound: get_hitsound_type(HitSoundType::Normal),
+                    hit_type: fluxis::FluXisHitType::Landmine,
+                    ..Default::default()
+                });
+            },
             _ => continue,
         }
     }

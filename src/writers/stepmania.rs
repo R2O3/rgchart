@@ -20,7 +20,7 @@ fn sm_row_to_str(row: &[Key]) -> String {
             KeyType::SliderEnd => '3',
             KeyType::Mine => 'M',
             KeyType::Fake => 'F',
-            KeyType::Unknown => '0',
+            KeyType::Unknown | _ => '0',
         });
     }
     result
