@@ -1,4 +1,12 @@
 # rgchart
+
+[![crates.io](https://img.shields.io/crates/v/rgchart?style=flat-square&logo=rust&logoColor=white&color=e05d2c)](https://crates.io/crates/rgchart)
+[![npm (browser)](https://img.shields.io/npm/v/%40r2o3%2Frgchart-browser?style=flat-square&logo=npm&logoColor=white&label=npm%20(browser)&color=CB3837)](https://www.npmjs.com/package/@r2o3/rgchart-browser)
+[![npm (node)](https://img.shields.io/npm/v/%40r2o3%2Frgchart-nodejs?style=flat-square&logo=npm&logoColor=white&label=npm%20(node)&color=CB3837)](https://www.npmjs.com/package/@r2o3/rgchart-nodejs)
+
+[![license](https://img.shields.io/badge/license-MIT-4A80D4?style=flat-square)](LICENSE)
+[![rust](https://img.shields.io/badge/rust-1.89+-orange?style=flat-square&logo=rust&logoColor=white)](https://www.rust-lang.org/tools/install)
+
 A library for parsing and writing charts for various rhythm games. It supports cross-platform usage including Web and Node.js environments via WebAssembly (WASM).
 
 ## Table of Contents
