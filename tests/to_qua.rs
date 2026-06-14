@@ -33,3 +33,14 @@ fn fsc_to_qua_test() {
         true
     );
 }
+
+#[test]
+fn fsc_to_qua_test_sv_groups() {
+    parse_and_convert!(
+        fsc_to_qua,
+        "./tests/Maps/fluXis/1704_titleHyperflipLong/1773816949.fsc",
+        parse::from_fsc_generic,
+        write::to_qua_generic,
+        true
+    );
+}

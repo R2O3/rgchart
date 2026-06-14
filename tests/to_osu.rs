@@ -33,3 +33,14 @@ fn fsc_to_osu_test() {
         true
     );
 }
+
+#[test]
+fn fsc_to_osu_test_sv_groups() {
+    parse_and_convert!(
+        fsc_to_osu,
+        "./tests/Maps/fluXis/1704_titleHyperflipLong/1773816949.fsc",
+        parse::from_fsc_generic,
+        write::to_osu_generic,
+        true
+    );
+}
