@@ -41,7 +41,7 @@ pub struct HitObject {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub group: Option<String>,
     
-    #[serde(rename = "type")]
+    #[serde(rename = "type", default = "default_type")]
     pub hit_type: FluXisHitType,
 }
 
@@ -137,3 +137,4 @@ impl HitObject {
 }
 
 fn is_default_hidden(value: &bool) -> bool { *value == false }
+fn default_type() -> FluXisHitType { FluXisHitType::NormalOrHold }

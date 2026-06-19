@@ -33,7 +33,7 @@ pub struct HitObject {
     #[serde(rename = "HitSound", skip_serializing_if = "Option::is_none")]
     pub hit_sound: Option<String>,
 
-    #[serde(rename = "Type")]
+    #[serde(rename = "Type", default = "default_type")]
     pub hit_type: QuaverHitType,
     
     #[serde(rename = "KeySounds")]
@@ -102,3 +102,5 @@ impl HitObject {
         }
     }
 }
+
+fn default_type() -> QuaverHitType { QuaverHitType::NormalOrHold }
