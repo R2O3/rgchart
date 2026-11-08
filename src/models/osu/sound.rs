@@ -5,6 +5,7 @@ pub enum SampleSet {
     Normal,
     Soft,
     Drum,
+    None,
 }
 
 impl FromStr for SampleSet {
@@ -15,6 +16,7 @@ impl FromStr for SampleSet {
             "Normal" => Ok(SampleSet::Normal),
             "Soft" => Ok(SampleSet::Soft),
             "Drum" => Ok(SampleSet::Drum),
+            "None" => Ok(SampleSet::None),
             _ => Err(format!("Invalid SampleSet: {}", s)),
         }
     }
@@ -26,6 +28,7 @@ impl ToString for SampleSet {
             SampleSet::Normal => "Normal".to_string(),
             SampleSet::Soft => "Soft".to_string(),
             SampleSet::Drum => "Drum".to_string(),
+            SampleSet::None => "None".to_string(),
         }
     }
 }
